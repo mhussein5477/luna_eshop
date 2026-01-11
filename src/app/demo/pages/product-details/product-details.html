@@ -1,0 +1,164 @@
+<div class="container-fluid" style="min-height: 100vh;">
+  <!-- Top Bar with Client Data -->
+  <app-top-bar-home 
+    [clientId]="clientId" 
+    [clientData]="clientData">
+  </app-top-bar-home>
+
+  <!-- Loading State -->
+  <div *ngIf="loadingClient" class="container mt-5">
+    <div class="text-center">
+      <app-loader-material></app-loader-material>
+      <p class="text-muted mt-3">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="row g-0" *ngIf="!loadingClient">
+    <div>
+      <!-- Back Button -->
+      <div class="d-flex justify-content-start mb-3 mt-3 ms-3">
+        <button 
+          class="btn btn-outline-secondary d-flex align-items-center back-btn"
+          (click)="redirectToProductList()">
+          <i class="fa fa-angle-left me-2" aria-hidden="true"></i>
+          Back to Product List
+        </button>
+      </div>
+
+      <!-- Product Card -->
+      <div class="row g-4 px-3" *ngIf="product">
+        <div class="col-12">
+          <div class="card border-0 p-3" style="border-radius: 20px;">
+            <div class="row g-0">
+              
+              <!-- Product Image -->
+              <div class="col-md-3 mt-5 position-relative">
+                <img 
+                  [src]="product.image" 
+                  width="300px" 
+                  style="border-radius: 20px; max-width: 100%;" 
+                  [alt]="product.name"
+                  onerror="this.src='assets/images/product.png'">
+                <span *ngIf="product.discount" class="badge bg-danger position-absolute top-0 start-0 m-2">
+                  -{{product.discount}}%
+                </span>
+                <span *ngIf="product.isFeatured" class="badge bg-success position-absolute top-0 end-0 m-2">
+                  Featured
+                </span>
+              </div>
+
+              <!-- Product Details -->
+              <div class="col-md-8 p-4">
+                <h5 class="card-title mb-2">{{product.name}}</h5>
+
+                <!-- Rating -->
+                <div class="d-flex align-items-center mb-2">
+                  <div class="text-warning me-2">
+                    <i *ngFor="let star of getStars(product.rating)"
+                       class="fa-star"
+                       [class.fa-solid]="star === 1"
+                       [class.fa-regular]="star === 0">
+                    </i>
+                  </div>
+                  <small class="text-muted">({{product.reviews}})</small>
+                </div>
+
+                <p class="card-text text-muted mb-3">{{product.description}}</p>
+
+                <!-- Specs -->
+                <div class="d-flex gap-2 flex-wrap mb-3">
+                  <span class="badge bg-light text-dark border" *ngIf="product.weight">
+                    <i class="fa-solid fa-box me-1"></i> {{product.weight}}
+                  </span>
+                  <span class="badge bg-light text-dark border" *ngIf="product.quantity">
+                    <i class="fa-solid fa-circle-plus me-1"></i> Available: {{product.quantity}}
+                  </span>
+                  <span class="badge bg-light text-dark border" *ngIf="product.size">
+                    <i class="fa-solid fa-ruler-horizontal me-1"></i> {{product.size}}
+                  </span>
+                  <span class="badge" 
+                        [class.bg-success]="product.isInStock" 
+                        [class.bg-danger]="!product.isInStock">
+                    {{ product.isInStock ? 'In Stock' : 'Out of Stock' }}
+                  </span>
+                </div>
+
+                <!-- Price -->
+                <div class="col-md-12">
+                  <!-- Price display -->
+                  <div class="text-start mb-3 mt-4">
+                    <h4 class="text-success mb-0" style="color: {{clientData?.themeColor}} !important;">
+                     {{ product.price > 0 ? (product.currencyCode + ' ' + (product.price | number:'1.2-2')) : 'N/A' }}
+                    </h4>
+                    <small class="text-muted text-decoration-line-through" *ngIf="product.discount > 0">
+                      {{ product.currencyCode }} {{ product.originalPrice * quantity | number:'1.2-2' }}
+                    </small>
+                  </div>
+
+                  <!-- Quantity Selector -->
+                  <div class="d-flex align-items-center mb-3">
+                    <button class="btn btn-outline-secondary px-3"
+                            (click)="decreaseQty()"
+                            [disabled]="quantity <= 1">
+                      -
+                    </button>
+
+                    <span class="mx-3 fs-5">{{ quantity }}</span>
+
+                    <button class="btn btn-outline-secondary px-3"
+                            (click)="increaseQty()"
+                            [disabled]="quantity >= (product.quantityAvailable || 999)">
+                      +
+                    </button>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="row">
+                    <div class="col-sm-3 d-flex justify-content-start mb-2">
+                      <button class="btn btn-success px-3 w-100" style="background-color: {{clientData?.themeColor}} !important; border:none"
+                              (click)="addToCart()"
+                              [disabled]="!product.isInStock">
+                        <i class="fa fa-cart-plus me-2"></i>
+                        Add To Cart
+                      </button>
+                    </div>
+
+                    <div class="col-sm-6 d-flex justify-content-start mb-2">
+                      <button class="btn btn-outline-success px-3 w-100" style="  border: 1px solid {{clientData?.themeColor}}  !important; color:  {{clientData?.themeColor}}  !important "
+                              (click)="addToCartAndCheckout()"
+                              [disabled]="!product.isInStock">
+                        <i class="fa fa-shopping-bag me-2"></i>
+                        Add To Cart & Check Out
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No product message -->
+      <div *ngIf="!product && !loadingClient" class="text-center py-5">
+        <i class="fa fa-exclamation-circle fs-1 text-muted"></i>
+        <p class="text-muted mt-3">Product not found</p>
+        <button class="btn btn-primary" (click)="redirectToProductList()">
+          Go to Product List
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center mt-4 pb-4">
+        <small class="text-muted">
+          Powered By Luna Packaging ltd. Ke 
+          <img src="assets/images/logo.png" alt="LPL Logo" height="16" class="ms-1">
+        </small>
+      </div>
+
+    </div>
+  </div>
+</div>

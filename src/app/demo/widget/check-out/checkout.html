@@ -1,0 +1,154 @@
+<div class="container-fluid" style="min-height: 100vh; background-color: #ECF3FE;">
+  <app-top-bar-home 
+    [clientId]="clientId" 
+    [clientData]="clientData">
+  </app-top-bar-home>
+  <div class="container py-5">
+     <button 
+      class="btn btn-outline-secondary mb-4"
+      [routerLink]="['/product-list']"
+       [queryParams]="{ clientCode: clientData?.clientCode }" >
+      <i class="fa fa-angle-left me-2"></i>
+      Continue Shopping
+    </button>  
+
+    <div class="row g-4">
+      <!-- Customer Information -->
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+          <div class="card-body p-4">
+            <h4 class="mb-4">
+              <i class="fa fa-user-circle me-2"></i>
+              Customer Information
+            </h4>
+
+            <form>
+              <div class="mb-3">
+                <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="customerInfo.name"
+                  name="name"
+                  placeholder="Enter your full name">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  [(ngModel)]="customerInfo.email"
+                  name="email"
+                  placeholder="your.email@example.com">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  [(ngModel)]="customerInfo.phone"
+                  name="phone"
+                  placeholder="+254 700 000 000">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Delivery Address <span class="text-danger">*</span></label>
+                <textarea 
+                  class="form-control" 
+                  rows="3"
+                  [(ngModel)]="customerInfo.address"
+                  name="address"
+                  placeholder="Enter your delivery address"></textarea>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+          <div class="card-body p-4">
+            <h4 class="mb-4">
+              <i class="fa fa-shopping-bag me-2"></i>
+              Order Summary
+            </h4>
+
+            <!-- Cart Items -->
+            <div class="cart-items mb-4" style="max-height: 400px; overflow-y: auto;">
+              <div *ngFor="let item of cartItems" class="d-flex mb-3 pb-3 border-bottom">
+                <img [src]="item.image" 
+                     class="rounded me-3" 
+                     style="width: 80px; height: 80px; object-fit: cover;"
+                     [alt]="item.name">
+                <div class="flex-grow-1">
+                  <h6 class="mb-1">{{item.name}}</h6>
+                  <small class="text-muted d-block mb-2">{{item.unitOfMeasure}}</small>
+                  <div class="d-flex align-items-center">
+                    <small class="text-muted">Qty: {{item.quantity}}</small>
+                    <span class="ms-auto fw-bold text-success" *ngIf="item.price > 0">
+                      {{item.currencyCode}} {{item.price * item.quantity | number:'1.2-2'}}
+                    </span>
+                    <span class="ms-auto fw-bold text-muted" *ngIf="item.price === 0">
+                      N/A
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="cartItems.length === 0" class="text-center py-4">
+                <i class="fa fa-shopping-cart fs-1 text-muted"></i>
+                <p class="text-muted mt-2">Your cart is empty</p>
+              </div>
+            </div>
+
+            <!-- Totals -->
+            <div class="border-top pt-3">
+              <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal ({{cartCount}} items)</span>
+                <span class="fw-bold" *ngIf="cartTotal > 0">KES {{cartTotal | number:'1.2-2'}}</span>
+                <span class="fw-bold text-muted" *ngIf="cartTotal === 0">N/A</span>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Delivery Fee</span>
+                <span class="text-success">Upon Agreed</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between mb-3">
+                <h5>Total</h5>
+                <h5 class="text-success" *ngIf="cartTotal > 0">KES {{cartTotal | number:'1.2-2'}}</h5>
+                <h5 class="text-muted" *ngIf="cartTotal === 0">N/A</h5>
+              </div>
+
+              <button 
+                class="btn btn-success w-100 py-3"
+                (click)="placeOrder()"
+                [disabled]="isSubmitting || cartItems.length === 0">
+                <app-loader-material *ngIf="isSubmitting"></app-loader-material>
+                <span *ngIf="!isSubmitting">
+                  <i class="fa fa-check me-2"></i>
+                  Place Order
+                </span>
+              </button>
+
+              <p class="text-muted small text-center mt-3 mb-0">
+                <i class="fa fa-lock me-1"></i>
+                Your information is secure
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-5">
+      <small class="text-muted">
+        Powered By Luna Packaging ltd. Ke 
+        <img src="assets/images/logo.png" alt="LPL Logo" height="16" class="ms-1">
+      </small>
+    </div>
+  </div>
+</div>

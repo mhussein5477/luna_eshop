@@ -1,0 +1,458 @@
+<div class="container-fluid py-4" style="height: 100vh;">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold">Product Catalog</h3>
+      <p class="text-muted">Manage your products and update pricing, stock, and discounts.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAddProductModal()" *ngIf="!isDevMode">
+      + Add Product
+    </button>
+  </div>
+
+  <!-- FILTERS ROW -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-2">
+      <div class="input-group">
+        <span class="input-group-text">
+        <i class="fa fa-search" aria-hidden="true"></i>
+        </span>
+        <input type="text" 
+               class="form-control" 
+               placeholder="Search product name..." 
+               [ngModel]="searchName"
+               (ngModelChange)="onSearchChange($event)">
+        <button class="btn btn-outline-secondary"  style="margin-left: 3px;"
+                type="button" 
+                *ngIf="searchName"
+                (click)="onSearchChange('')"
+                title="Clear search">
+         <i class="fa-solid fa-times"></i>
+
+        </button>
+      </div>
+      <small class="text-muted" *ngIf="searchName">
+        <i class="fa-solid fa-circle-info me-1"></i>
+
+        Searching for "{{ searchName }}"...
+      </small>
+    </div>
+
+    <div class="col-md-6 d-flex gap-2 flex-wrap align-items-center">
+      <span class="badge p-2 px-3" 
+            [class.bg-primary]="selectedFilter==='all'" 
+            [class.bg-secondary]="selectedFilter!=='all'"
+            style="cursor: pointer;"
+            (click)="setFilter('all')">All</span>
+      <span class="badge p-2 px-3" 
+            [class.bg-primary]="selectedFilter==='featured'" 
+            [class.bg-secondary]="selectedFilter!=='featured'"
+            style="cursor: pointer;"
+            (click)="setFilter('featured')">Featured</span>
+      <span class="badge p-2 px-3" 
+            [class.bg-primary]="selectedFilter==='sale'" 
+            [class.bg-secondary]="selectedFilter!=='sale'"
+            style="cursor: pointer;"
+            (click)="setFilter('sale')">On Sale</span>
+    </div>
+  </div>
+
+  <!-- LOADER -->
+  <div style="text-align: center;" *ngIf="isLoadingProducts">
+    <app-loader-material></app-loader-material>
+    <p class="text-muted mt-2">Loading products...</p>
+  </div>
+
+  <!-- PRODUCT CARDS GRID -->
+  <div class="row row-cols-1 row-cols-md-3 g-4" *ngIf="!isLoadingProducts">
+    <div class="col" *ngFor="let product of filteredProducts">
+      <div class="card h-100 shadow-sm">
+        <div class="position-relative">
+          <!-- Product Image -->
+          <img [src]="getProductImage(product)" 
+               class="card-img-top" 
+               [alt]="product.name"
+               style="height: 200px; object-fit: cover;">
+          
+          <!-- Featured Badge -->
+          <span class="badge bg-success position-absolute top-0 end-0 m-2" *ngIf="product.isFeatured">
+            Featured
+          </span>
+          
+          <!-- Discount Badge -->
+          <span class="badge bg-danger position-absolute top-0 start-0 m-2" *ngIf="product.discountAmount > 0">
+            -{{ product.discountAmount }}%
+          </span>
+
+          <!-- Image Count Indicator -->
+          <span class="badge bg-dark position-absolute bottom-0 end-0 m-2" 
+                *ngIf="product.imageUrls && product.imageUrls.length > 1">
+            <i class="fa fa-images me-1"></i>
+            {{ product.imageUrls.length }}
+          </span>
+        </div>
+
+        <div class="card-body d-flex flex-column">
+          <!-- Title -->
+          <h5 class="card-title">{{ product.name }}</h5>
+
+          <!-- Description -->
+          <p class="card-text text-muted small flex-grow-1">{{ product.description }}</p>
+
+          <!-- Specs -->
+          <div class="d-flex gap-2 flex-wrap mb-2">
+            <span class="badge bg-light text-dark border">{{ product.unitOfMeasure }}</span>
+            <span class="badge bg-light text-dark border">Stock: {{ product.quantityAvailable }}</span>
+            <span class="badge" 
+                  [class.bg-success]="product.isInStock" 
+                  [class.bg-danger]="!product.isInStock">
+              {{ product.isInStock ? 'In Stock' : 'Out of Stock' }}
+            </span>
+            <span class="badge bg-light text-dark border"> {{ product.status }}</span>
+
+          </div>
+
+          <!-- Price + Actions -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-success mb-0">{{ product.currencyCode }} {{ product.unitPrice || 'N/A'}}</h6>
+              <small class="text-muted" *ngIf="product.taxAmount > 0">Tax: {{ product.taxAmount }}%</small>
+            </div>
+
+            <!-- Actions Dropdown -->
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                Actions
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+    <a class="dropdown-item" (click)="changeProductStatus(product)">
+      <i class="bi me-2" 
+         [class.bi-toggle-on]="product.status === 'ACTIVE'" 
+         [class.bi-toggle-off]="product.status === 'INACTIVE'"></i>
+      {{ product.status === 'ACTIVE' ? 'Deactivate' : 'Activate' }}
+    </a>
+  </li>
+  <li><hr class="dropdown-divider"></li>
+  <li>
+    <a class="dropdown-item text-danger" (click)="deleteProduct(product)">
+      <i class="bi bi-trash me-2"></i>Delete
+    </a>
+  </li>
+                <li>
+                  <a class="dropdown-item" (click)="viewProduct(product)">
+                    <i class="bi bi-eye me-2"></i>View
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" (click)="editProduct(product)">
+                    <i class="bi bi-pencil me-2"></i>Edit
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item text-danger" (click)="deleteProduct(product)">
+                    <i class="bi bi-trash me-2"></i>Delete
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="filteredProducts.length === 0 && !isLoadingProducts" class="text-center py-5">
+    <i class="fa fa-inbox fs-1 text-muted"></i>
+
+    <p class="text-muted mt-3">
+      {{ searchName ? 'No products found matching "' + searchName + '"' : 'No products found' }}
+    </p>
+    <button class="btn btn-outline-primary" 
+            *ngIf="searchName" 
+            (click)="onSearchChange('')">
+      Clear Search
+    </button>
+  </div>
+
+  <!-- PAGINATION -->
+  <app-pagination style="margin-top: 20px;"
+    *ngIf="!isLoadingProducts && filteredProducts.length > 0"
+    [totalItems]="totalElements"
+    [pageSize]="searchPayload.pageSize"
+    [currentPage]="searchPayload.pageNo + 1"
+    (pageChange)="onPageChange($event)">
+  </app-pagination>
+
+</div>
+
+<!-- ADD/EDIT PRODUCT MODAL -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">
+          {{ modalMode === 'view' ? 'View Product' : modalMode === 'edit' ? 'Edit Product' : 'Add New Product' }}
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="row g-3">
+
+            <!-- Client Selector - Only for Dev Mode and Add Mode -->
+            <div class="col-12" *ngIf="isDevMode && modalMode === 'add'">
+              <div class="alert alert-info d-flex align-items-center" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                <div>
+                  <strong>Admin Mode</strong> - Select a client to associate this product with.
+                </div>
+              </div>
+              <label class="form-label">Select Client <span class="text-danger">*</span></label>
+              <select class="form-select"
+                      [(ngModel)]="activeProduct.clientId"
+                      name="clientId">
+                <option value="">Choose a client...</option>
+                <option *ngFor="let client of clients" [value]="client.id">
+                  {{ client.name }} ({{ client.clientCode }})
+                </option>
+              </select>
+            </div>
+
+            <!-- Product Name -->
+            <div class="col-md-6">
+              <label class="form-label">Product Name *</label>
+              <input class="form-control"
+                     type="text"
+                     [(ngModel)]="activeProduct.name"
+                     name="name"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <!-- Category with Add Button -->
+            <div class="col-md-6">
+              <label class="form-label">Category *</label>
+              <div class="input-group">
+                <select class="form-select"
+                        [(ngModel)]="activeProduct.categoryId"
+                        name="categoryId"
+                        [disabled]="modalMode==='view'">
+                  <option value="">Select Category</option>
+                  <option *ngFor="let cat of categories" [value]="cat.id">
+                    {{ cat.name }}
+                  </option>
+                </select>
+                <button class="btn btn-outline-primary"  style="margin-left: 5px;"
+                        type="button"
+                        (click)="openAddCategoryModal()"
+                        *ngIf="modalMode!=='view'"
+                        title="Add new category">
+                  <i class="fa fa-plus" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea class="form-control"
+                        rows="3"
+                        [(ngModel)]="activeProduct.description"
+                        name="description"
+                        [disabled]="modalMode==='view'"></textarea>
+            </div>
+
+            <!-- Unit Price -->
+            <div class="col-md-4">
+              <label class="form-label">Unit Price *</label>
+              <input class="form-control"
+                     type="number"
+                     step="0.01"
+                     [(ngModel)]="activeProduct.unitPrice"
+                     name="unitPrice"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <!-- Currency -->
+            <div class="col-md-4">
+              <label class="form-label">Currency</label>
+              <input class="form-control"
+                     type="text"
+                     [(ngModel)]="activeProduct.currencyCode"
+                     name="currencyCode"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <!-- Unit of Measure -->
+            <div class="col-md-4">
+              <label class="form-label">Unit of Measure</label>
+              <input class="form-control"
+                     type="text"
+                     [(ngModel)]="activeProduct.unitOfMeasure"
+                     name="unitOfMeasure"
+                     placeholder="e.g., pcs, kg, liter"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <!-- Discount Amount -->
+            <div class="col-md-4">
+              <label class="form-label">Discount (%)</label>
+              <input class="form-control"
+                     type="number"
+                     step="0.01"
+                     [(ngModel)]="activeProduct.discountAmount"
+                     name="discountAmount"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <!-- Tax Amount -->
+            <div class="col-md-4">
+              <label class="form-label">Tax (%)</label>
+              <input class="form-control"
+                     type="number"
+                     step="0.01"
+                     [(ngModel)]="activeProduct.taxAmount"
+                     name="taxAmount"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <!-- Quantity Available -->
+            <div class="col-md-4">
+              <label class="form-label">Quantity Available</label>
+              <input class="form-control"
+                     type="number"
+                     [(ngModel)]="activeProduct.quantityAvailable"
+                     name="quantityAvailable"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <!-- Image Upload - Only for Add/Edit Mode -->
+            <div class="col-12" *ngIf="modalMode === 'add' || modalMode === 'edit'">
+              <label class="form-label">Product Images</label>
+              <input class="form-control"
+                     type="file"
+                     accept="image/*"
+                     multiple
+                     (change)="onFileSelected($event)"
+                     >
+              <small class="text-muted">You can select multiple images</small>
+              
+              <!-- Selected files preview -->
+              <div *ngIf="selectedFiles.length > 0" class="mt-2">
+                <small class="text-success">
+                  <i class="fa fa-check-circle me-1"></i>
+                  {{ selectedFiles.length }} file(s) selected
+                </small>
+              </div>
+            </div>
+
+            <!-- Display existing images in view/edit mode -->
+            <div class="col-12" *ngIf="(modalMode === 'view' || modalMode === 'edit') && activeProduct.imageUrls && activeProduct.imageUrls.length > 0">
+              <label class="form-label">Current Images</label>
+              <div class="d-flex gap-2 flex-wrap">
+                <img *ngFor="let imgUrl of activeProduct.imageUrls" 
+                     [src]="imgUrl" 
+                     alt="Product image"
+                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+              </div>
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="col-12 d-flex gap-4">
+              <div class="form-check">
+                <input class="form-check-input" 
+                       type="checkbox"
+                       [(ngModel)]="activeProduct.isInStock"
+                       name="isInStock"
+                       [disabled]="modalMode==='view'">
+                <label class="form-check-label">In Stock</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" 
+                       type="checkbox"
+                       [(ngModel)]="activeProduct.isFeatured"
+                       name="isFeatured"
+                       [disabled]="modalMode==='view'">
+                <label class="form-check-label">Featured Product</label>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          {{ modalMode === 'view' ? 'Close' : 'Cancel' }}
+        </button>
+
+        <button *ngIf="modalMode !== 'view'"
+          class="btn btn-primary d-flex align-items-center gap-2"
+          (click)="submitProduct()"
+          [disabled]="isSubmitting || isUploadingImages">
+
+          <app-loader-material *ngIf="isSubmitting || isUploadingImages"></app-loader-material>
+          <span>{{ isSubmitting ? 'Saving...' : isUploadingImages ? 'Uploading Images...' : 'Save Product' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD CATEGORY MODAL -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Add Product Category</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Category Name *</label>
+            <input class="form-control"
+                   type="text"
+                   [(ngModel)]="newCategory.name"
+                   name="categoryName"
+                   placeholder="e.g., Bakery">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control"
+                      rows="3"
+                      [(ngModel)]="newCategory.description"
+                      name="categoryDescription"
+                      placeholder="Brief description of the category"></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button class="btn btn-primary d-flex align-items-center gap-2"
+          (click)="submitCategory()"
+          [disabled]="isSavingCategory">
+
+          <app-loader-material *ngIf="isSavingCategory"></app-loader-material>
+          <span>{{ isSavingCategory ? '' : 'Save Category' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

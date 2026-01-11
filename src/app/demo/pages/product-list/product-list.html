@@ -1,0 +1,199 @@
+<app-welcome-modal *ngIf="showModal" (closeModal)="showModal = false"></app-welcome-modal>
+
+<div class="container-fluid" style="height: 100vh;">
+  <app-top-bar-home 
+    [clientId]="clientId" 
+    [clientData]="clientData">
+  </app-top-bar-home>
+  <div class="row g-0">
+    <!-- Sidebar Filters -->
+ <div
+  class="col-lg-3 col-md-4 p-4 filter-sidebar"
+  [class.show]="isMobileFiltersOpen"
+  style="background-color: #FFFBFE;"
+>
+
+      <div class="d-flex justify-content-between align-items-center d-md-none mb-3">
+  <h5 class="mb-0">Filters</h5>
+  <button class="btn btn-sm btn-outline-danger" (click)="closeFilters()">
+    <i class="fa fa-times"></i>
+  </button>
+</div>
+
+
+      <!-- Featured / Discount Filter -->
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Filters</label>
+        <div class="btn-group w-100" role="group">
+          <button type="button" 
+                  class="btn btn-outline-secondary btn-sm"
+                  [class.active]="selectedFeatureFilter === ''"
+                  (click)="selectedFeatureFilter = ''; applyFilters()">
+            All
+          </button>
+          <button type="button" style="margin-left: 6px;"
+                  class="btn btn-outline-secondary btn-sm"
+                  [class.active]="selectedFeatureFilter === 'featured'"
+                  (click)="selectedFeatureFilter = 'featured'; applyFilters()">
+            Featured
+          </button>
+          <button type="button" style="margin-left: 6px;"
+                  class="btn btn-outline-secondary btn-sm"
+                  [class.active]="selectedFeatureFilter === 'discount'"
+                  (click)="selectedFeatureFilter = 'discount'; applyFilters()">
+            Discounted
+          </button>
+        </div>
+      </div>
+
+      <!-- Name Search -->
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Name</label>
+        <input type="text" class="form-control" placeholder="Product Name"
+               [(ngModel)]="searchName" (input)="applyFilters()">
+      </div>
+
+      <!-- Price Range -->
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Price Range</label>
+        <div class="d-flex gap-2">
+          <input type="number" class="form-control form-control-sm" placeholder="Min Price"
+                 [(ngModel)]="minPrice" (input)="applyFilters()">
+          <input type="number" class="form-control form-control-sm" placeholder="Max Price"
+                 [(ngModel)]="maxPrice" (input)="applyFilters()">
+        </div>
+      </div>
+
+      <h6 style="color: grey; cursor: pointer;" (click)="clearFilters()">Clear Filters</h6>
+      <button class="btn btn-primary w-100" (click)="applyFilters()">Search</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9 col-md-8 p-4" style="background-color: #FFFBFE;">
+      <!-- Mobile Filters Toggle -->
+<div class="d-block d-md-none mb-3">
+  <button class="btn btn-outline-primary w-100" (click)="toggleFilters()">
+    <i class="fa fa-filter me-2"></i>
+    {{ isMobileFiltersOpen ? 'Hide Filters' : 'Show Filters' }}
+  </button>
+</div>
+
+      <div class="mb-4">
+        <h4 class="mb-1">Product List</h4>
+        <p class="text-muted">Choose a product and proceed to complete your order seamlessly</p>
+      </div>
+
+      <!-- Loading -->
+      <div style="text-align: center;" *ngIf="loading">
+        <app-loader-material></app-loader-material>
+        <p class="text-muted mt-2">Loading products...</p>
+      </div>
+
+      <!-- Product Cards -->
+      <div class="row g-4" *ngIf="!loading">
+        <div class="col-12" *ngFor="let product of filteredProducts">
+          <div class="card border-0 hover-shadow" style="border-radius: 20px;">
+            <div class="row g-0">
+              
+              <!-- Product Image -->
+              <div class="col-md-3 position-relative">
+                <img [src]="product.image" class="img-fluid h-100 object-fit-cover"
+                     style="border-radius: 20px; cursor: pointer;" 
+                     [alt]="product.name"
+                     (click)="viewProduct(product)">
+                <span *ngIf="product.discount" class="badge bg-danger position-absolute top-0 start-0 m-2">
+                  -{{product.discount}}%
+                </span>
+                <span *ngIf="product.isFeatured" class="badge bg-success position-absolute top-0 end-0 m-2">
+                  Featured
+                </span>
+              </div>
+
+              <!-- Product Details -->
+              <div class="col-md-6 p-4">
+                <h5 class="card-title mb-2" style="cursor: pointer;" (click)="viewProduct(product)">
+                  {{product.name}}
+                </h5>
+
+                <!-- Rating -->
+                <div class="d-flex align-items-center mb-2">
+                  <div class="text-warning me-2">
+                    <i *ngFor="let star of getStars(product.rating)"
+                       class="fa-star"
+                       [class.fa-solid]="star === 1"
+                       [class.fa-regular]="star === 0"></i>
+                  </div>
+                  <small class="text-muted">({{product.reviews}})</small>
+                </div>
+
+                <p class="card-text text-muted mb-3">{{product.description}}</p>
+
+                <!-- Specs -->
+                <div class="d-flex gap-2 flex-wrap">
+                  <span *ngIf="product.weight" class="badge bg-light text-dark border">
+                    <i class="fa-solid fa-box me-1"></i> {{product.weight}}
+                  </span>
+                  <span *ngIf="product.quantity" class="badge bg-light text-dark border">
+                    <i class="fa-solid fa-circle-plus me-1"></i> {{product.quantity}}
+                  </span>
+                  <span *ngIf="product.size" class="badge bg-light text-dark border">
+                    <i class="fa-solid fa-ruler-horizontal me-1"></i> {{product.size}}
+                  </span>
+                  <span class="badge" 
+                        [class.bg-success]="product.isInStock" 
+                        [class.bg-danger]="!product.isInStock">
+                    {{ product.isInStock ? 'In Stock' : 'Out of Stock' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Price -->
+              <div class="col-md-3 p-4 d-flex flex-column justify-content-center align-items-end">
+                <div class="text-end mb-3">
+                  <h4 class="text-success mb-0" style="color: {{clientData?.themeColor}} !important;">  {{ product.price > 0 ? (product.currencyCode + ' ' + (product.price | number:'1.2-2')) : 'N/A' }}</h4>
+                  <small class="text-muted text-decoration-line-through" *ngIf="product.discount > 0">
+                    {{product.currencyCode}} {{product.originalPrice | number:'1.2-2'}}
+                  </small>
+                </div>
+                <button class="btn btn-success w-100" (click)="viewProduct(product)" style="background-color: {{clientData?.themeColor}} !important; border:none">
+                  Shop Now
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Results -->
+      <div *ngIf="!loading && filteredProducts.length === 0" class="text-center py-5">
+        <i class="fa fa-inbox fs-1 text-muted"></i>
+        <p class="text-muted mt-3">No products found matching your filters</p>
+      </div>
+
+      <!-- Pagination -->
+      <nav *ngIf="!loading && filteredProducts.length > 0" aria-label="Page navigation" class="mt-5">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 0">
+            <a class="page-link" (click)="goToPage(currentPage)" style="cursor: pointer;">Prev</a>
+          </li>
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index"
+              [class.active]="currentPage === i">
+            <a class="page-link" (click)="goToPage(i + 1)" style="cursor: pointer;">{{i + 1}}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+            <a class="page-link" (click)="goToPage(currentPage + 2)" style="cursor: pointer;">Next</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Footer -->
+      <div class="text-center mt-4">
+        <small class="text-muted">
+          Powered By Luna Packaging ltd. Ke 
+          <img src="assets/images/logo.png" alt="LPL Logo" height="16" class="ms-1">
+        </small>
+      </div>
+    </div>
+  </div>
+</div>

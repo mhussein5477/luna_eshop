@@ -1,0 +1,127 @@
+<!-- Header -->
+<nav class="navbar navbar-light py-3" style="background-color: white !important;">
+  <div class="container-fluid">
+    <!-- Logo - Dynamic from client data -->
+    <a class="navbar-brand d-flex" href="#">
+      <img 
+        [src]="getClientLogo()" 
+        [alt]="getClientName()" 
+        height="40" 
+        class="d-none d-md-block"
+        onerror="this.src='assets/images/image.png'">
+      <img 
+        [src]="getClientLogo()" 
+        [alt]="getClientName()" 
+        height="30" 
+        class="d-md-none"
+        onerror="this.src='assets/images/image.png'">
+        <h6 style="margin-left: 10px; margin-top: 10px; color: {{clientData?.themeColor}};">{{clientData?.name}}</h6>
+    </a>
+
+    <!-- Desktop Actions -->
+    <div class="d-none d-lg-flex align-items-center gap-3">
+      <!-- Download button -->
+      <button 
+        class="btn btn-outline-success d-flex align-items-center"  style="  border: 1px solid {{clientData?.themeColor}}  !important; color:  {{clientData?.themeColor}}  !important "
+        (click)="download()"
+        [disabled]="isDownloading || !clientId">
+        <i class="fa-solid" [class.fa-download]="!isDownloading" [class.fa-spinner]="isDownloading" [class.fa-spin]="isDownloading" class="me-2"></i>
+        <span *ngIf="!isDownloading">Download Product Catalog</span>
+        <span *ngIf="isDownloading">Downloading...</span>
+      </button>
+
+      <!-- Cart -->
+      <div class="position-relative btn btn-outline-secondary" (click)="openModal()">
+        <i class="fa-solid fa-cart-shopping fs-6"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" *ngIf="cartCount > 0">
+          {{cartCount}}
+        </span>
+      </div>
+
+      <!-- Login -->
+      <button 
+        class="btn btn-outline-primary" 
+        [routerLink]="['/login']">
+        Login Distributor Portal →
+      </button>
+    </div>
+
+    <!-- Mobile/Tablet Actions -->
+    <div class="d-lg-none d-flex align-items-center gap-2">
+      <!-- Download button - Tablet & Mobile -->
+      <button 
+        class="btn btn-outline-success btn-sm d-flex align-items-center" 
+        (click)="download()"
+        [disabled]="isDownloading || !clientId">
+        <i class="fa-solid d-md-none" [class.fa-download]="!isDownloading" [class.fa-spinner]="isDownloading" [class.fa-spin]="isDownloading"></i>
+        <i class="fa-solid me-1 d-none d-md-inline" [class.fa-download]="!isDownloading" [class.fa-spinner]="isDownloading" [class.fa-spin]="isDownloading"></i>
+        <span class="d-none d-md-inline ms-1" *ngIf="!isDownloading">Download</span>
+        <span class="d-none d-md-inline ms-1" *ngIf="isDownloading">...</span>
+      </button>
+
+      <!-- Cart -->
+      <div class="position-relative btn btn-outline-secondary btn-sm" (click)="openModal()">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" *ngIf="cartCount > 0">
+          {{cartCount}}
+        </span>
+      </div>
+
+      <!-- Login - Icon only on mobile, text on tablet -->
+      <button 
+        class="btn btn-outline-primary text-decoration-none btn-sm p-2" 
+        [routerLink]="['/login']"
+        title="Login to Distributor Portal">
+        <i class="fa-solid fa-right-to-bracket d-md-none"></i>
+        <span class="d-none d-md-inline">Login →</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Social Media Links - Desktop/Tablet -->
+  <div class="d-none d-md-flex align-items-center gap-2 ms-3">
+     <div class="d-flex align-items-center gap-2 mt-2 ms-3">
+    <a   [href]="clientData?.facebookAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-facebook-f"></i>
+    </a>
+    <a   [href]="clientData?.twitterAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-twitter"></i>
+    </a>
+    <a   [href]="clientData?.instagramAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-instagram"></i>
+    </a>
+    <a  [href]="clientData?.whatsappAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-whatsapp"></i>
+    </a>
+  </div>
+  </div>
+
+  <!-- Mobile Menu Bar (Optional - Below main nav) -->
+  <div class="d-md-none w-100 border-top mt-2 pt-2">
+    <div class="container-fluid">
+      <div class="d-flex justify-content-center gap-2">
+         <a   [href]="clientData?.facebookAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-facebook-f"></i>
+    </a>
+    <a   [href]="clientData?.twitterAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-twitter"></i>
+    </a>
+    <a   [href]="clientData?.instagramAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-instagram"></i>
+    </a>
+    <a  [href]="clientData?.whatsappAcc" target="_blank" class="btn btn-light btn-sm">
+      <i class="fa-brands fa-whatsapp"></i>
+    </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Shopping Cart Modal -->
+<app-shopping-cart 
+  *ngIf="showModal" 
+  [clientId]="clientId"
+  [clientData]="clientData"
+
+  (closeModal)="showModal = false">
+</app-shopping-cart>

@@ -1,0 +1,353 @@
+// Card Styling
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  }
+}
+
+// Nav Pills
+.nav-pills {
+  gap: 0.5rem;
+  
+  .nav-link {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: #6c757d;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+
+    i {
+      font-size: 0.9rem;
+    }
+
+    &:hover {
+      background-color: #f8f9fa;
+      color: #495057;
+    }
+
+    &.active {
+      background-color: #0d6efd;
+      color: white;
+      box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+    }
+  }
+}
+
+// Password Toggle
+.password-toggle {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #e9ecef;
+  }
+
+  i {
+    color: #6c757d;
+  }
+}
+
+// Password Strength Bar
+.password-strength-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+
+  .password-strength-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+  }
+}
+
+// Password Requirements
+.password-requirements {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 3px solid #0d6efd;
+
+  small {
+    line-height: 1.8;
+  }
+
+  .fa-check-circle {
+    transition: all 0.3s ease;
+  }
+}
+
+// MFA Status
+.mfa-status {
+  .bg-success-subtle {
+    background-color: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.2);
+  }
+
+  .bg-warning-subtle {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+  }
+}
+
+// MFA Benefits
+.mfa-benefits {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+
+  ul {
+    margin: 0;
+    padding-left: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+
+      i {
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+// Notification Items
+.notification-item {
+  padding: 1rem 0;
+
+  .form-check {
+    padding-left: 3rem;
+
+    .form-check-input {
+      width: 3rem;
+      height: 1.5rem;
+      margin-left: -3rem;
+      cursor: pointer;
+      
+      &:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+      }
+    }
+
+    .form-check-label {
+      cursor: pointer;
+      width: 100%;
+      
+      strong {
+        color: #212529;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+      }
+
+      small {
+        color: #6c757d;
+        line-height: 1.5;
+      }
+    }
+  }
+}
+
+// Form Controls
+.form-control,
+.input-group-text {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+
+  &:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+
+  &:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+  }
+
+  &.is-invalid {
+    border-color: #dc3545;
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+  }
+}
+
+.input-group {
+  .input-group-text {
+    background-color: white;
+    border-left: none;
+  }
+
+  .form-control {
+    border-right: none;
+  }
+}
+
+// Buttons
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+
+  i {
+    font-size: 0.9rem;
+  }
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    border: none;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #bb2d3b 100%);
+    border: none;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Form Labels
+.form-label {
+  margin-bottom: 0.5rem;
+  color: #495057;
+  font-size: 0.95rem;
+
+  .text-danger {
+    margin-left: 2px;
+  }
+}
+
+// Headers
+h3 {
+  color: #212529;
+  font-weight: 700;
+}
+
+h5 {
+  color: #212529;
+  font-weight: 600;
+}
+
+.text-muted {
+  color: #6c757d !important;
+  font-size: 0.9rem;
+}
+
+// Card Title Icon
+.card-title {
+  margin-bottom: 0;
+}
+
+// Loading State
+.text-center {
+  app-loader-material {
+    display: inline-block;
+  }
+}
+
+// Horizontal Rule
+hr {
+  margin: 1.5rem 0;
+  opacity: 0.1;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .card {
+    padding: 1.5rem !important;
+  }
+
+  .nav-pills {
+    .nav-link {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  .btn {
+    padding: 0.625rem 1.25rem;
+  }
+
+  .notification-item {
+    .form-check {
+      padding-left: 2.5rem;
+
+      .form-check-input {
+        width: 2.5rem;
+        margin-left: -2.5rem;
+      }
+    }
+  }
+}
+
+// Animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+// Small text
+small {
+  font-size: 0.875rem;
+}
+
+// Icon colors
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}

@@ -1,0 +1,470 @@
+<div class="container-fluid py-4 clients-page" style="height: 100vh;">
+
+  <!-- PAGE HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold">Clients</h3>
+      <p class="text-muted">Manage distributors, accounts, and billing.</p>
+    </div>
+
+    <button class="btn btn-primary" (click)="openAddClientModal()">
+      + Add Client
+    </button>
+  </div>
+
+  <div class="row">
+
+    <!-- LEFT FILTERS -->
+    <div class="col-md-3 mb-4">
+      <div class="mb-3">
+        <label class="form-label">Client Name</label>
+        <input type="text" class="form-control" [(ngModel)]="filters.name">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="text" class="form-control" [(ngModel)]="filters.email">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Phone Number</label>
+        <input type="text" class="form-control" [(ngModel)]="filters.phone">
+      </div>
+
+      <button class="btn btn-primary w-100 mt-2" (click)="applyFilters()">
+        Apply Filters
+      </button>
+    </div>
+
+    <!-- RIGHT CONTENT -->
+    <div class="col-md-9">
+
+      <!-- STATUS PILLS -->
+      <div class="d-flex gap-2 flex-wrap mb-3 client-pills">
+        <span class="badge p-2 px-3"
+              [class.active-pill]="selectedFilter === 'all'"
+              (click)="filterByStatus('all')"
+              style="cursor: pointer;">All</span>
+
+        <span class="badge p-2 px-3"
+              [class.active-pill]="selectedFilter === 'active'"
+              (click)="filterByStatus('active')"
+              style="cursor: pointer;">Active Accounts</span>
+
+        <span class="badge p-2 px-3"
+              [class.active-pill]="selectedFilter === 'pending'"
+              (click)="filterByStatus('pending')"
+              style="cursor: pointer;">Pending</span>
+
+        <span class="badge p-2 px-3"
+              [class.active-pill]="selectedFilter === 'inactive'"
+              (click)="filterByStatus('inactive')"
+              style="cursor: pointer;">Inactive</span>
+      </div>
+
+      <div style="text-align: center;">
+        <app-loader-material *ngIf="isLoadingClients"></app-loader-material>
+      </div>
+
+      <div *ngIf="filteredClients.length === 0 && !isLoadingClients" class="text-center py-5">
+        <i class="fa fa-inbox fs-1 text-muted"></i>
+        <p class="text-muted mt-3">No Clients found</p>
+      </div>
+
+      <div style="height: 70vh; overflow: auto;">
+        <div *ngFor="let client of filteredClients" class="card mb-3 p-3 client-card">
+
+          <div class="row mb-3">
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <!-- Client Logo/Avatar -->
+                <div class="client-avatar" >
+                  <img *ngIf="client?.clientLogo"  
+                       [src]="client?.clientLogo" 
+                       [alt]="client.name"
+                       class="avatar-img">
+                  <div *ngIf="!client.clientLogo" class="avatar-placeholder">
+                    {{ getClientInitials(client.name) }}
+                  </div>
+                </div>
+
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-1">{{ client.name }}</h6>
+                    <span class="badge"
+                          [ngClass]="client.clientStatus == 'ACTIVE' ? 'badge-active' : 'badge-inactive'">
+                      {{ client.clientStatus }}
+                    </span>
+                  </div>
+                  <p class="text-muted small mb-1">{{ client.clientCode }} | Created on {{ client.createdAt }}</p>
+                  <p class="small mb-0">
+                    <a [href]="client.url" target="_blank" class="text-primary text-decoration-none">
+                      {{ client.url }}
+                    </a>
+                  </p>
+                </div>
+              </div>
+
+              <div class="row small">
+                <div class="col-md-4"><strong>Location:</strong> {{ client.location }}</div>
+                <div class="col-md-4"><strong>Phone:</strong> {{ client.phone }}</div>
+                <div class="col-md-4"><strong>Email:</strong> {{ client.email }}</div>
+
+                <div class="col-md-4 mt-2">
+                  <button class="btn btn-sm btn-outline-primary" (click)="viewUserDetails(client.id)">
+                    <i class="bi bi-person me-1"></i> View User Details
+                  </button>
+                </div>
+                <div class="col-md-4 mt-2"><strong>Total Products:</strong> {{client?.totalProducts}}</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="row border-top pt-3 align-items-start">
+            <div class="col-md-9">
+              <details>
+                <summary class="fw-semibold mb-2">
+                  Payment History ({{ client.payments.length }})
+                </summary>
+
+                <ul class="list-group small">
+                  <li class="list-group-item d-flex justify-content-between"
+                      *ngFor="let pay of client.payments">
+                    <span>{{ pay.date }}</span>
+                    <span class="fw-bold">KES {{ pay.amount }}</span>
+                  </li>
+                  <li *ngIf="client.payments.length === 0" class="list-group-item text-muted">
+                    No payments recorded
+                  </li>
+                </ul>
+              </details>
+            </div>
+
+            <div class="col-md-3 border-start">
+              <div class="dropdown w-100">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" type="button"
+                        data-bs-toggle="dropdown">
+                  Actions
+                </button>
+
+                <ul class="dropdown-menu w-100">
+                  <li>
+                    <a class="dropdown-item" (click)="changeStatus(client, 'DEACTIVATED')">
+                      <i class="bi bi-x-circle me-2"></i>Deactivate Account
+                    </a>
+                  </li>
+
+                  <li>
+                    <a class="dropdown-item" (click)="changeStatus(client, 'ACTIVE')">
+                      <i class="bi bi-check-circle me-2"></i>Activate Account
+                    </a>
+                  </li>
+
+                  <li>
+                    <a class="dropdown-item" (click)="editClient(client)">
+                      <i class="bi bi-pencil-square me-2"></i>
+                      Edit Client
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" (click)="viewClient(client)">
+                      <i class="bi bi-eye me-2"></i>
+                      View Client
+                    </a>
+                  </li>
+
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete Client</a></li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <app-pagination style="margin-top: 10px;"
+                      [totalItems]="totalElements"
+                      [pageSize]="searchPayload.pageSize"
+                      [currentPage]="searchPayload.pageNo + 1"
+                      (pageChange)="onPageChange($event)">
+      </app-pagination>
+
+    </div>
+  </div>
+</div>
+
+<!------------------------POP UP----------------------------------------------------->
+<!-- ADD CLIENT MODAL -->
+<div class="modal fade" id="addClientModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">
+          {{ modalMode === 'view' ? 'View Client' : modalMode === 'edit' ? 'Edit Client' : 'Add New Client' }}
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <!-- Logo Upload Section -->
+          <div class="text-center mb-4" *ngIf="modalMode !== 'view'">
+            <div class="logo-upload-container">
+              <div class="logo-preview-wrapper mx-auto">
+                <img *ngIf="logoPreviewUrl" 
+                     [src]="logoPreviewUrl" 
+                     alt="Logo Preview"
+                     class="logo-preview-img">
+                <div *ngIf="!logoPreviewUrl" class="logo-placeholder">
+                  <i class="fa fa-building fs-1 text-muted"></i>
+                  <p class="small text-muted mb-0 mt-2">No Logo</p>
+                </div>
+                <button *ngIf="logoPreviewUrl" 
+                        type="button" 
+                        class="btn btn-sm btn-danger remove-logo-btn"
+                        (click)="removeLogo()">
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
+              <div class="mt-3">
+                <label for="logoFileInput" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-upload me-2"></i>
+                  {{ logoPreviewUrl ? 'Change Logo' : 'Upload Logo' }}
+                </label>
+                <input type="file" 
+                       id="logoFileInput" 
+                       class="d-none" 
+                       accept="image/*"
+                       (change)="onLogoFileSelected($event)">
+                <p class="text-muted small mt-2 mb-0">Supported: JPG, PNG, GIF, WEBP (Max 5MB)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo Display in View Mode -->
+          <div class="text-center mb-4" *ngIf="modalMode === 'view'">
+            <div class="logo-preview-wrapper mx-auto">
+              <img *ngIf="logoPreviewUrl" 
+                   [src]="logoPreviewUrl" 
+                   alt="Client Logo"
+                   class="logo-preview-img">
+              <div *ngIf="!logoPreviewUrl" class="logo-placeholder">
+                <i class="bi bi-building fs-1 text-muted"></i>
+                <p class="small text-muted mb-0 mt-2">No Logo</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Information Section -->
+          <h6 class="fw-bold mb-3 text-primary">Client Information</h6>
+          <div class="row g-3 mb-4">
+
+            <div class="col-md-6" *ngFor="let field of [
+                {label:'Client Name', model:'name'},
+                {label:'Industry', model:'industry'},
+                {label:'Email', model:'emailAddress'},
+                {label:'Phone', model:'phoneNumber'},
+                {label:'Physical Address', model:'physicalAddress'},
+                {label:'Website', model:'website'},
+                {label:'TIN', model:'tin'},
+                {label:'WhatsApp', model:'whatsappAcc'},
+                {label:'Facebook', model:'facebookAcc'},
+                {label:'Twitter', model:'twitterAcc'},
+                {label:'Instagram', model:'instagramAcc'},
+                {label:'Theme Color', model:'themeColor', type:'color'}
+              ]">
+              <label class="form-label">{{ field.label }}</label>
+              <input class="form-control"
+                     [type]="field.type ? field.type : 'text'"
+                     [(ngModel)]="activeClient[field.model]"
+                     [name]="field.model"
+                     [disabled]="modalMode==='view'">
+            </div>
+
+            <div class="col-md-12 d-flex align-items-center gap-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                       [(ngModel)]="activeClient.isEmailNotify"
+                       name="emailNotify"
+                       [disabled]="modalMode==='view'">
+                <label class="form-check-label">Email Notifications</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                       [(ngModel)]="activeClient.isSmsNotify"
+                       name="smsNotify"
+                       [disabled]="modalMode==='view'">
+                <label class="form-check-label">SMS Notifications</label>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- User Details Section - Only for Add Mode -->
+          <div *ngIf="modalMode === 'add'">
+            <hr>
+            <h6 class="fw-bold mb-3 text-primary">User Account Details</h6>
+            <div class="row g-3">
+
+              <div class="col-md-6">
+                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                <input class="form-control"
+                       type="text"
+                       [(ngModel)]="activeClient.userDetails.firstName"
+                       name="firstName">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input class="form-control"
+                       type="text"
+                       [(ngModel)]="activeClient.userDetails.lastName"
+                       name="lastName">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">User Email <span class="text-danger">*</span></label>
+                <input class="form-control"
+                       type="email"
+                       [(ngModel)]="activeClient.userDetails.emailAddress"
+                       name="userEmail">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">User Phone <span class="text-danger">*</span></label>
+                <input class="form-control"
+                       type="text"
+                       [(ngModel)]="activeClient.userDetails.phoneNumber"
+                       name="userPhone">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input class="form-control"
+                         [type]="showPassword ? 'text' : 'password'"
+                         [(ngModel)]="activeClient.userDetails.password"
+                         name="password"
+                         placeholder="Enter user password">
+                  <button class="btn btn-outline-secondary" style="margin-left: 3px; padding:5px; border-radius: 3px !important;" type="button" (click)="togglePasswordVisibility()">
+                    <i class="fa" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+                </div>
+                <small class="text-muted">Password is required when creating a new client</small>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input class="form-control"
+                         [type]="showConfirmPassword ? 'text' : 'password'"
+                         [(ngModel)]="confirmPassword"
+                         name="confirmPassword"
+                         placeholder="Re-enter password"
+                         [class.is-invalid]="confirmPassword && activeClient.userDetails.password !== confirmPassword">
+                  <button class="btn btn-outline-secondary" style="margin-left: 3px; padding:5px; border-radius: 3px !important;" type="button" (click)="toggleConfirmPasswordVisibility()">
+                    <i class="fa" [ngClass]="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+                </div>
+                <small class="text-danger" *ngIf="confirmPassword && activeClient.userDetails.password !== confirmPassword">
+                  Passwords do not match
+                </small>
+              </div>
+
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button *ngIf="modalMode !== 'view'"
+                class="btn btn-primary d-flex align-items-center gap-2"
+                (click)="submitClient()"
+                [disabled]="isSubmitting || isUploadingLogo">
+
+          <app-loader-material *ngIf="isSubmitting || isUploadingLogo"></app-loader-material>
+          <span>{{ (isSubmitting || isUploadingLogo) ? '' : 'Save Client' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- USER DETAILS MODAL -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-person-circle me-2"></i> User Account Details
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div style="text-align: center;" *ngIf="isLoadingUserDetails">
+          <app-loader-material></app-loader-material>
+          <p class="text-muted mt-2">Loading user details...</p>
+        </div>
+
+        <div *ngIf="!isLoadingUserDetails && userDetails">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-6 mb-3">
+                      <label class="text-muted small">First Name</label>
+                      <p class="fw-semibold mb-0">{{ userDetails.firstName || 'N/A' }}</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                      <label class="text-muted small">Last Name</label>
+                      <p class="fw-semibold mb-0">{{ userDetails.lastName || 'N/A' }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <label class="text-muted small">Email Address</label>
+                      <p class="fw-semibold mb-0">{{ userDetails.emailAddress || 'N/A' }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <label class="text-muted small">Phone Number</label>
+                      <p class="fw-semibold mb-0">{{ userDetails.phoneNumber || 'N/A' }}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <label class="text-muted small">User ID</label>
+                      <p class="fw-semibold mb-0 small text-break">{{ userDetails.id || 'N/A' }}</p>
+                    </div>
+                    <!-- <div class="col-12">
+                      <label class="text-muted small">Username</label>
+                      <p class="fw-semibold mb-0">{{ userDetails.password || 'N/A' }}</p>
+                    </div> -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoadingUserDetails && !userDetails" class="text-center py-4">
+          <i class="bi bi-exclamation-circle fs-1 text-warning"></i>
+          <p class="text-muted mt-3">No user details found for this client.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

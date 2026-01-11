@@ -1,0 +1,54 @@
+:host {
+  display: inline-flex;
+}
+
+/* Material 3 tonal color */
+.expressive-loader {
+  --loader-color: var(--md-sys-color-primary-container, #b19ad7);
+  width: 64px;
+//   height: 64px;
+}
+
+.shape {
+  fill: var(--loader-color);
+  transform-origin: 50% 50%;
+  animation:
+    morph 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+    rotate 2.4s linear infinite;
+}
+
+/* Rotation (subtle, expressive) */
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+ @keyframes morph {
+  /* ● Circle */
+  0% {
+    d: path("M50 15 A35 35 0 1 1 49.9 15");
+  }
+
+  /* ◼ Rounded square */
+  25% {
+    d: path("M28 20 H72 A8 8 0 0 1 80 28 V72 A8 8 0 0 1 72 80 H28 A8 8 0 0 1 20 72 V28 A8 8 0 0 1 28 20");
+  }
+
+  /* ▭ Pill */
+  50% {
+    d: path("M25 35 H75 A15 15 0 0 1 75 65 H25 A15 15 0 0 1 25 35");
+  }
+
+  /* ◆ Soft diamond */
+  75% {
+    d: path("M50 15 Q60 30 85 50 Q60 70 50 85 Q40 70 15 50 Q40 30 50 15");
+  }
+
+  /* ● Circle */
+  100% {
+    d: path("M50 15 A35 35 0 1 1 49.9 15");
+  }
+}

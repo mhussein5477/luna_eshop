@@ -1,0 +1,437 @@
+<div class="container-fluid py-4 orders-page">
+
+  <!-- PAGE HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold">Orders</h3>
+      <p class="text-muted">Manage, track and process all customer orders.</p>
+    </div>
+
+    <button class="btn btn-primary" (click)="openAddOrderModal()" *ngIf="!isDevMode">
+      + Add Manual Order
+    </button>
+  </div>
+
+  <div class="row">
+
+    <!-- LEFT FILTERS -->
+    <div class="col-md-3 mb-4">
+      <div class="card p-3">
+        <h6 class="fw-bold mb-3">Filters</h6>
+
+        <div class="mb-3">
+          <label class="form-label">Order No</label>
+          <input type="text" 
+                 class="form-control"
+                 [ngModel]="filters.orderNo"
+                 (ngModelChange)="onOrderNoChange($event)"
+                 placeholder="Search order number...">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Date</label>
+          <input type="date" 
+                 class="form-control"
+                 [ngModel]="filters.createdDate"
+                 (ngModelChange)="onDateChange($event)">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Client Name</label>
+          <input type="text" 
+                 class="form-control"
+                 [ngModel]="filters.customerName"
+                 (ngModelChange)="onCustomerNameChange($event)"
+                 placeholder="Search customer name...">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Client Phone No</label>
+          <input type="text" 
+                 class="form-control"
+                 [ngModel]="filters.customerPhone"
+                 (ngModelChange)="onCustomerPhoneChange($event)"
+                 placeholder="Search phone number...">
+        </div>
+
+        <button class="btn btn-outline-secondary w-100 mt-2"
+                *ngIf="filters.orderNo || filters.createdDate || filters.customerName || filters.customerPhone"
+                (click)="filters = {orderNo: '', customerName: '', customerPhone: '', createdDate: ''}; searchPayload.orderNo = ''; searchPayload.customerName = ''; searchPayload.customerPhone = ''; searchPayload.createdDate = ''; loadOrders()">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="col-md-9">
+
+      <!-- FILTER PILLS -->
+      <div class="d-flex gap-2 flex-wrap mb-3 order-pills">
+       <span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'all'"
+      (click)="setFilter('all')">
+  All
+</span>
+
+<span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'pending'"
+      (click)="setFilter('pending')">
+  Pending
+</span>
+
+<span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'confirmed'"
+      (click)="setFilter('confirmed')">
+  Confirmed
+</span>
+
+<span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'paid'"
+      (click)="setFilter('paid')">
+  Paid
+</span>
+
+<span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'shipped'"
+      (click)="setFilter('shipped')">
+  Shipped
+</span>
+
+<span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'delivered'"
+      (click)="setFilter('delivered')">
+  Delivered
+</span>
+
+<span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'cancelled'"
+      (click)="setFilter('cancelled')">
+  Cancelled
+</span>
+
+<span class="badge p-2 px-3"
+      [class.active-pill]="selectedFilter === 'refunded'"
+      (click)="setFilter('refunded')">
+  Refunded
+</span>
+
+      </div>
+
+      <!-- LOADER -->
+      <div style="text-align: center;" *ngIf="isLoadingOrders">
+        <app-loader-material></app-loader-material>
+        <p class="text-muted mt-2">Loading orders...</p>
+      </div>
+
+      <!-- ORDER LIST -->
+      <div class="order-list" *ngIf="!isLoadingOrders">
+
+        <div *ngFor="let order of filteredOrders" class="card mb-3 p-3 order-card">
+
+          <div class="row">
+
+            <!-- COLUMN 1 -->
+            <div class="col-sm-8">
+
+           <h6 class="fw-bold">Order #{{ order.orderNo }}</h6>
+<p class="text-muted small mb-2">Created on: {{ order.createdDate | date:'dd MMM yyyy' }}</p>
+
+<!-- Timeline -->
+<div class="timeline small mb-3">
+  <div class="d-flex gap-2 flex-wrap">
+    <span *ngFor="let step of timelineSteps; let i = index">
+      <span
+        [class.timeline-done]="i < order.stepsCompleted"
+        [class.timeline-pending]="i >= order.stepsCompleted">
+        <i class="fa"
+           [ngClass]="i < order.stepsCompleted ? 'fa-check-circle text-success' : 'fa-circle text-muted'">
+        </i>
+        {{ step }}
+      </span>
+      <span *ngIf="i < timelineSteps.length - 1">→</span>
+    </span>
+  </div>
+</div>
+
+<!-- Order Items -->
+<details class="order-items">
+  <summary class="fw-semibold mb-2">Order Items ({{ order.items?.length || 0 }})</summary>
+
+  <ul class="list-group small">
+    <li class="list-group-item d-flex justify-content-between"
+        *ngFor="let item of order.items">
+    
+        <strong>{{item.productName}}</strong>
+      <span>
+         {{ item.qty || 0 }} × {{ item.unitPrice|| 'Unnamed' }}
+      </span>
+
+      <span class="fw-bold">
+        {{ order.currencyCode || 'KES' }} {{ (item.unitPrice || 0) * (item.qty || 0) | number:'1.2-2' }}
+      </span>
+
+    </li>
+  </ul>
+</details>
+
+ 
+
+            </div>
+
+            <!-- COLUMN 2 -->
+            <div class="col-sm-4 border-start">
+
+              <div class="mb-2"><strong>Client:</strong> {{ order.client?.name || order.customerName }}</div>
+
+              <div class="text-muted small mb-3">
+                {{ order.client?.location || order.customerAddress }} <br>
+                {{ order.client?.phone || order.customerPhone }}
+              </div>
+
+              <h6 class="fw-bold mb-3">KES {{ order.price || order.totalAmount || 0 }}</h6>
+
+              <div class="dropdown w-100 mb-2">
+                <button 
+                  class="btn btn-outline-secondary btn-sm dropdown-toggle w-100"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  Actions
+                </button>
+
+                <ul class="dropdown-menu w-100">
+
+                 <li>
+  <a class="dropdown-item" (click)="markConfirmed(order)">
+    <i class="bi bi-check-circle me-2"></i> Confirm Order
+  </a>
+</li>
+
+<li>
+  <a class="dropdown-item" (click)="markPaid(order)">
+    <i class="bi bi-cash-stack me-2"></i> Mark as Paid
+  </a>
+</li>
+
+<li>
+  <a class="dropdown-item" (click)="markShipped(order)">
+    <i class="bi bi-truck me-2"></i> Ship Order
+  </a>
+</li>
+
+<li>
+  <a class="dropdown-item" (click)="markDelivered(order)">
+    <i class="bi bi-box-seam me-2"></i> Mark as Delivered
+  </a>
+</li>
+
+<li><hr class="dropdown-divider"></li>
+
+<li>
+  <a class="dropdown-item text-warning" (click)="refundOrder(order)">
+    <i class="bi bi-arrow-counterclockwise me-2"></i> Refund
+  </a>
+</li>
+
+<li>
+  <a class="dropdown-item text-danger" (click)="cancelOrder(order)">
+    <i class="bi bi-x-circle me-2"></i> Cancel
+  </a>
+</li>
+
+
+                </ul>
+              </div>
+
+              <span class="badge" [ngClass]="getStatusClass(order.status)">
+                {{ order.status || 'Pending' }}
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- No Results -->
+        <div *ngIf="filteredOrders.length === 0" class="text-center py-5">
+        <i class="fa fa-inbox fs-1 text-muted"></i>
+
+          <p class="text-muted mt-3">No orders found</p>
+        </div>
+
+      </div>
+
+      <!-- PAGINATION -->
+      <app-pagination style="margin-top: 20px;"
+        *ngIf="!isLoadingOrders && filteredOrders.length > 0"
+        [totalItems]="totalElements"
+        [pageSize]="searchPayload.pageSize"
+        [currentPage]="searchPayload.pageNo + 1"
+        (pageChange)="onPageChange($event)">
+      </app-pagination>
+
+    </div>
+
+  </div>
+</div>
+ 
+
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <!-- MODAL HEADER -->
+      <div class="modal-header">
+        <h5 class="fw-bold mb-0">
+          {{ modalMode === 'view' ? 'View Order' : modalMode === 'edit' ? 'Edit Order' : 'Create Order' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- ✅ MODAL BODY (THIS WAS MISSING) -->
+<div class="modal-body">
+
+  <!-- CUSTOMER DETAILS -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="fw-bold mb-3">Customer Details</h6>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Customer Name *</label>
+          <input type="text"
+                 class="form-control"
+                 [(ngModel)]="activeOrder.customerName"
+                 [disabled]="modalMode === 'view'">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Phone Number *</label>
+          <input type="text"
+                 class="form-control"
+                 [(ngModel)]="activeOrder.customerPhone"
+                 [disabled]="modalMode === 'view'">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email"
+                 class="form-control"
+                 [(ngModel)]="activeOrder.customerEmail"
+                 [disabled]="modalMode === 'view'">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Address</label>
+          <input type="text"
+                 class="form-control"
+                 [(ngModel)]="activeOrder.customerAddress"
+                 [disabled]="modalMode === 'view'">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD PRODUCT (HIDDEN IN VIEW MODE) -->
+  <div *ngIf="modalMode !== 'view'" class="mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Product</label>
+        <select class="form-select" [(ngModel)]="tempProductId">
+          <option value="">-- Select Product --</option>
+          <option *ngFor="let p of availableProducts" [value]="p.id">
+            {{ p.name }} (KES {{ p.unitPrice }})
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Quantity</label>
+        <input type="number"
+               min="1"
+               class="form-control"
+               [(ngModel)]="tempQuantity">
+      </div>
+
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100"
+                (click)="addProductToOrder()">
+          <i class="fa fa-plus me-1"></i> Add
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER ITEMS -->
+  <div class="card">
+    <div class="card-body">
+      <h6 class="fw-bold mb-3">
+        Order Items ({{ activeOrder.products.length }})
+      </h6>
+
+      <div *ngIf="activeOrder.products.length === 0"
+           class="text-muted text-center py-3">
+        No products added
+      </div>
+
+      <ul class="list-group list-group-flush"
+          *ngIf="activeOrder.products.length > 0">
+
+        <li class="list-group-item d-flex justify-content-between align-items-center"
+            *ngFor="let item of activeOrder.products; let i = index">
+
+          <div>
+            <strong>{{ item.productName }}</strong>
+            <div class="small text-muted">
+              Quantity: {{ item.quantity }} × KES {{ item.unitPrice }}
+            </div>
+          </div>
+
+          <div class="text-end">
+            <div class="fw-bold">
+              KES {{ item.unitPrice * item.quantity }}
+            </div>
+
+            <button *ngIf="modalMode !== 'view'"
+                    class="btn btn-sm btn-outline-danger mt-1"
+                    (click)="removeProductFromOrder(i)">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+
+        </li>
+      </ul>
+
+      <div class="d-flex justify-content-end mt-3">
+        <h6 class="fw-bold mb-0">
+          Total: KES {{ orderTotal }}
+        </h6>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+      <!-- MODAL FOOTER -->
+      <div class="modal-footer">
+        <button type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal">
+          Close
+        </button>
+
+        <!-- SAVE BUTTON (HIDDEN IN VIEW MODE) -->
+        <button *ngIf="modalMode !== 'view'"
+                class="btn btn-primary d-flex align-items-center gap-2"
+                (click)="submitOrder()"
+                [disabled]="isSubmitting">
+
+          <app-loader-material *ngIf="isSubmitting"></app-loader-material>
+          <span>{{ modalMode === 'edit' ? 'Update Order' : 'Create Order' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

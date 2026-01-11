@@ -1,0 +1,24 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4); /** NOT solid black **/
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content-box {
+  background: #ffffff;       /** white box **/
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  padding: 24px;
+  animation: fadeIn 0.3s ease-out;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}

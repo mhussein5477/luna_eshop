@@ -1,0 +1,477 @@
+<div class="container-fluid py-4" style="height: 100vh; overflow: hidden; display: flex; flex-direction: column;">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold">
+        <i class="fa fa-chart-line me-2"></i>
+        Reports & Analytics
+      </h3>
+      <p class="text-muted">Generate comprehensive reports and download data for analysis</p>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="row g-3" style="flex: 1; overflow: hidden;">
+    
+    <!-- LEFT SIDEBAR - Report Types -->
+    <div class="col-md-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h6 class="mb-0">
+            <i class="fa fa-folder-open me-2"></i>
+            Report Types
+          </h6>
+        </div>
+        
+        <div class="card-body p-2" style="overflow-y: auto;">
+          <div 
+            *ngFor="let report of reportTypes"
+            class="report-type-card p-3 mb-2 rounded border"
+            [class.active]="activeReport?.id === report.id"
+            [class.border-primary]="activeReport?.id === report.id"
+            (click)="selectReport(report)"
+            style="cursor: pointer; transition: all 0.2s;">
+            <div class="d-flex align-items-start gap-2">
+              <div class="report-icon">
+                <i class="fa {{ report.icon }} fa-2x" 
+                   [class.text-primary]="activeReport?.id === report.id"
+                   [class.text-secondary]="activeReport?.id !== report.id"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold" [class.text-primary]="activeReport?.id === report.id">
+                  {{ report.title }}
+                </h6>
+                <p class="mb-0 small text-muted">{{ report.description }}</p>
+              </div>
+              <i class="fa fa-chevron-right text-muted"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer bg-light text-muted small">
+          <i class="fa fa-info-circle me-1"></i>
+          Select a report type to view filters and data
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL - Filters & Data -->
+    <div class="col-md-9" style="display: flex; flex-direction: column; overflow: hidden;">
+      <div class="card h-100 shadow-sm" style="display: flex; flex-direction: column; overflow: hidden;">
+        
+        <!-- Empty State -->
+        <div *ngIf="!activeReport" class="card-body text-center py-5">
+          <i class="fa fa-chart-bar fa-4x text-muted mb-3"></i>
+          <h4>Select a Report Type</h4>
+          <p class="text-muted">Choose a report from the left sidebar to get started</p>
+        </div>
+
+        <!-- Active Report Content -->
+        <div *ngIf="activeReport" class="card-body report-content-scroll" style="overflow-y: auto; overflow-x: hidden; flex: 1; max-height: calc(100vh - 200px);">
+          
+          <!-- Report Header -->
+          <div class="d-flex justify-content-between align-items-start mb-4 pb-3 border-bottom">
+            <div class="d-flex gap-3 align-items-start">
+              <i class="fa {{ activeReport.icon }} fa-3x text-primary"></i>
+              <div>
+                <h4 class="mb-1">{{ activeReport.title }}</h4>
+                <p class="text-muted mb-0">{{ activeReport.description }}</p>
+              </div>
+            </div>
+            <button 
+              class="btn btn-success d-flex align-items-center gap-2"
+              (click)="downloadReport()"
+              [disabled]="isDownloading">
+              <i class="fa" [class.fa-download]="!isDownloading" [class.fa-spinner]="isDownloading" [class.fa-spin]="isDownloading"></i>
+              {{ isDownloading ? 'Downloading...' : 'Download Excel' }}
+            </button>
+          </div>
+
+          <!-- Filters Section -->
+          <div class="card bg-light mb-4">
+            <div class="card-header">
+              <h6 class="mb-0">
+                <i class="fa fa-filter me-2"></i>
+                Filters
+              </h6>
+            </div>
+            <div class="card-body">
+
+              <!-- ORDERS FILTERS -->
+              <div *ngIf="activeReport.endpoint === 'orders'" class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label small">Order Status</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="ordersFilters.orderStatus">
+                    <option value="">All Statuses</option>
+                    <option *ngFor="let status of orderStatuses" [value]="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Customer Name</label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fa fa-user"></i></span>
+                    <input type="text" class="form-control" [(ngModel)]="ordersFilters.customerName" placeholder="Search by name">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Customer Email</label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                    <input type="email" class="form-control" [(ngModel)]="ordersFilters.customerEmail" placeholder="Search by email">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Customer Phone</label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fa fa-phone"></i></span>
+                    <input type="text" class="form-control" [(ngModel)]="ordersFilters.customerPhone" placeholder="Search by phone">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Customer Address</label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fa fa-map-marker-alt"></i></span>
+                    <input type="text" class="form-control" [(ngModel)]="ordersFilters.customerAddress" placeholder="Search by address">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Sort By</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="ordersFilters.sortBy">
+                    <option value="createdAt">Created Date</option>
+                    <option value="totalAmount">Total Amount</option>
+                    <option value="customerName">Customer Name</option>
+                    <option value="orderStatus">Status</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Sort Direction</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="ordersFilters.sortDir">
+                    <option *ngFor="let dir of sortDirections" [value]="dir">
+                      {{ dir === 'ASC' ? 'Ascending' : 'Descending' }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Page Size</label>
+                  <input type="number" class="form-control form-control-sm" [(ngModel)]="ordersFilters.pageSize" min="1" max="1000">
+                </div>
+              </div>
+
+              <!-- PRODUCTS FILTERS -->
+              <div *ngIf="activeReport.endpoint === 'products'" class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label small">Product Name</label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fa fa-search"></i></span>
+                    <input type="text" class="form-control" [(ngModel)]="productsFilters.name" placeholder="Search by name">
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Product Status</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="productsFilters.status">
+                    <option value="">All Statuses</option>
+                    <option *ngFor="let status of productStatuses" [value]="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Description</label>
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="productsFilters.description" placeholder="Search by description">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Unit of Measure</label>
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="productsFilters.unitOfMeasure" placeholder="e.g., pcs, kg">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Currency Code</label>
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="productsFilters.currencyCode" placeholder="e.g., KES, USD">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">In Stock</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="productsFilters.isInStock">
+                    <option [value]="null">All</option>
+                    <option [value]="1">In Stock</option>
+                    <option [value]="0">Out of Stock</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Featured</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="productsFilters.isFeatured">
+                    <option [value]="null">All</option>
+                    <option [value]="1">Featured</option>
+                    <option [value]="0">Not Featured</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Sort By</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="productsFilters.sortBy">
+                    <option value="name">Name</option>
+                    <option value="unitPrice">Price</option>
+                    <option value="quantityAvailable">Quantity</option>
+                    <option value="createdAt">Created Date</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Sort Direction</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="productsFilters.sortDir">
+                    <option *ngFor="let dir of sortDirections" [value]="dir">
+                      {{ dir === 'ASC' ? 'Ascending' : 'Descending' }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label small">Page Size</label>
+                  <input type="number" class="form-control form-control-sm" [(ngModel)]="productsFilters.pageSize" min="1" max="1000">
+                </div>
+              </div>
+
+              <!-- Filter Actions -->
+              <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
+                <button class="btn btn-outline-secondary btn-sm" (click)="resetFilters()">
+                  <i class="fa fa-redo me-1"></i>
+                  Reset Filters
+                </button>
+                <button class="btn btn-primary btn-sm" (click)="applyFilters()" [disabled]="isLoadingData">
+                  <i class="fa fa-search me-1"></i>
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoadingData" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading report data...</p>
+          </div>
+
+          <!-- Summary Cards (Orders) -->
+          <div *ngIf="!isLoadingData && activeReport.endpoint === 'orders' && ordersData.length > 0">
+            <h5 class="mb-3">
+              <i class="fa fa-chart-pie me-2"></i>
+              Summary Statistics
+            </h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="card border-primary">
+                  <div class="card-body text-center">
+                    <i class="fa fa-shopping-cart fa-2x text-primary mb-2"></i>
+                    <h6 class="text-muted mb-1">Total Orders</h6>
+                    <h3 class="mb-0">{{ ordersSummary.totalOrders }}</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="card border-success">
+                  <div class="card-body text-center">
+                    <i class="fa fa-money-bill-wave fa-2x text-success mb-2"></i>
+                    <h6 class="text-muted mb-1">Total Revenue</h6>
+                    <h3 class="mb-0 text-success">{{ formatCurrency(ordersSummary.totalRevenue) }}</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="card border-info">
+                  <div class="card-body text-center">
+                    <i class="fa fa-calculator fa-2x text-info mb-2"></i>
+                    <h6 class="text-muted mb-1">Average Order Value</h6>
+                    <h3 class="mb-0 text-info">{{ formatCurrency(ordersSummary.averageOrderValue) }}</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="card border-warning">
+                  <div class="card-body text-center">
+                    <i class="fa fa-clock fa-2x text-warning mb-2"></i>
+                    <h6 class="text-muted mb-1">Pending Orders</h6>
+                    <h3 class="mb-0 text-warning">{{ ordersSummary.pendingOrders }}</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="card border-success">
+                  <div class="card-body text-center">
+                    <i class="fa fa-check-circle fa-2x text-success mb-2"></i>
+                    <h6 class="text-muted mb-1">Completed Orders</h6>
+                    <h3 class="mb-0 text-success">{{ ordersSummary.completedOrders }}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Cards (Products) -->
+          <div *ngIf="!isLoadingData && activeReport.endpoint === 'products' && productsData.length > 0">
+            <h5 class="mb-3">
+              <i class="fa fa-chart-pie me-2"></i>
+              Summary Statistics
+            </h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="card border-primary">
+                  <div class="card-body text-center">
+                    <i class="fa fa-box fa-2x text-primary mb-2"></i>
+                    <h6 class="text-muted mb-1">Total Products</h6>
+                    <h3 class="mb-0">{{ productsSummary.totalProducts }}</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="card border-success">
+                  <div class="card-body text-center">
+                    <i class="fa fa-check-circle fa-2x text-success mb-2"></i>
+                    <h6 class="text-muted mb-1">Active Products</h6>
+                    <h3 class="mb-0 text-success">{{ productsSummary.activeProducts }}</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="card border-danger">
+                  <div class="card-body text-center">
+                    <i class="fa fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                    <h6 class="text-muted mb-1">Out of Stock</h6>
+                    <h3 class="mb-0 text-danger">{{ productsSummary.outOfStock }}</h3>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- <div class="col-md-3">
+                <div class="card border-info">
+                  <div class="card-body text-center">
+                    <i class="fa fa-wallet fa-2x text-info mb-2"></i>
+                    <h6 class="text-muted mb-1">Inventory Value</h6>
+                    <h3 class="mb-0 text-info">{{ formatCurrency(productsSummary.totalInventoryValue) }}</h3>
+                  </div>
+                </div>
+              </div> -->
+            </div>
+          </div>
+
+          <!-- Data Table (Orders) -->
+          <div *ngIf="!isLoadingData && activeReport.endpoint === 'orders'">
+            <h5 class="mb-3">
+              <i class="fa fa-table me-2"></i>
+              Orders Data ({{ ordersData.length }} records)
+            </h5>
+            
+            <div *ngIf="ordersData.length === 0" class="text-center py-5">
+              <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+              <p class="text-muted">No orders found matching your filters</p>
+            </div>
+
+            <div *ngIf="ordersData.length > 0" class="table-responsive">
+              <table class="table table-striped table-hover table-bordered">
+                <thead class="table-dark">
+                  <tr>
+                    <th style="color:black !important" >Order ID</th>
+                    <th style="color:black !important" >Customer</th>
+                    <th style="color:black !important" >Email</th>
+                    <th style="color:black !important" >Phone</th>
+                    <th style="color:black !important" >Status</th>
+                    <th style="color:black !important" >Total Amount</th>
+                    <th style="color:black !important" >Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let order of ordersData">
+                    <td><code>{{ order.id?.substring(0, 8) }}...</code></td>
+                    <td>{{ order.customerName || 'N/A' }}</td>
+                    <td>{{ order.customerEmail || 'N/A' }}</td>
+                    <td>{{ order.customerPhone || 'N/A' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getStatusClass(order.orderStatus)">
+                        {{ order.orderStatus }}
+                      </span>
+                    </td>
+                    <td class="fw-bold text-success">{{ formatCurrency(order.totalAmount || 0) }}</td>
+                    <td>{{ formatDate(order.createdAt) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Data Table (Products) -->
+          <div *ngIf="!isLoadingData && activeReport.endpoint === 'products'">
+            <h5 class="mb-3">
+              <i class="fa fa-table me-2"></i>
+              Products Data ({{ productsData.length }} records)
+            </h5>
+            
+            <div *ngIf="productsData.length === 0" class="text-center py-5">
+              <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+              <p class="text-muted">No products found matching your filters</p>
+            </div>
+
+            <div *ngIf="productsData.length > 0" class="table-responsive">
+              <table class="table table-striped table-hover table-bordered">
+                <thead class="table-dark">
+                  <tr>
+                    <th style="color:black !important" >Product ID</th>
+                    <th style="color:black !important" >Name</th>
+                    <th style="color:black !important" >Price</th>
+                    <th style="color:black !important" >Quantity</th>
+                    <th style="color:black !important" >Status</th>
+                    <th style="color:black !important" >Featured</th>
+                    <th style="color:black !important" >In Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let product of productsData">
+                    <td><code>{{ product.id?.substring(0, 8) }}...</code></td>
+                    <td>{{ product.name }}</td>
+                    <td class="fw-bold text-success">{{ formatCurrency(product.unitPrice || 0) }}</td>
+                    <td>{{ product.quantityAvailable || 0 }} {{ product.unitOfMeasure || '' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getStatusClass(product.status)">
+                        {{ product.status }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <i class="fa fa-star" [class.text-warning]="product.isFeatured === 1" [class.text-muted]="product.isFeatured !== 1"></i>
+                    </td>
+                    <td class="text-center">
+                      <i class="fa" 
+                         [class.fa-check-circle]="product.isInStock === 1"  
+                         [class.text-danger]="product.isInStock == 0"></i>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

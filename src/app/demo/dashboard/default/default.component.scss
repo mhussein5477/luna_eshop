@@ -1,0 +1,165 @@
+// Dashboard Cards
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+// Analytics Cards
+.card-body {
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+  }
+  
+  h6 {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// Chart Container
+.chart-container {
+  position: relative;
+  padding: 1rem 0;
+}
+
+// Bar Chart Styling
+.bar-wrapper {
+  .bar {
+    background: linear-gradient(180deg, #4f46e5 0%, #6366f1 100%);
+    min-height: 20px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      opacity: 0.8;
+      transform: scaleY(1.05);
+    }
+  }
+}
+
+// Progress Bars
+.progress {
+  border-radius: 10px;
+  overflow: hidden;
+  
+  .progress-bar {
+    transition: width 0.6s ease;
+  }
+}
+
+// Table Styling
+.table {
+  font-size: 0.875rem;
+  
+  thead {
+    th {
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7280;
+    }
+  }
+  
+  tbody {
+    tr {
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: #f9fafb;
+      }
+    }
+  }
+  
+  code {
+    font-size: 0.8rem;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #6b7280;
+  }
+}
+
+// Featured Products Hover
+.hover-bg {
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+}
+
+// Badge Styling
+.badge {
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+// Loading Animation
+.spinner-border {
+  border-width: 0.3rem;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .card-body {
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+  
+  .table {
+    font-size: 0.75rem;
+    
+    thead th {
+      font-size: 0.65rem;
+    }
+  }
+  
+  .chart-container {
+    height: 200px !important;
+  }
+}
+
+// Icon Animations
+.fa-2x, .fa-3x {
+  transition: transform 0.3s ease;
+}
+
+.card:hover .fa-2x,
+.card:hover .fa-3x {
+  transform: scale(1.1);
+}
+
+// Empty State
+.opacity-25 {
+  opacity: 0.25;
+}
+
+// Custom Scrollbar for tables
+.table-responsive {
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #555;
+    }
+  }
+}

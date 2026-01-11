@@ -1,0 +1,71 @@
+<!-- Shopping Cart Modal Overlay -->
+<div class="modal-overlay" (click)="close()">
+  <div class="cart-modal" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="cart-header">
+      <h5 class="mb-0">
+        <i class="fa fa-shopping-cart me-2"></i>
+        Shopping Cart ({{cartCount}})
+      </h5>
+      <button class="btn-close" (click)="close()"></button>
+    </div>
+
+    <!-- Cart Items -->
+    <div class="cart-body">
+      <div *ngIf="cartItems.length === 0" class="text-center py-5">
+        <i class="fa fa-shopping-cart fs-1 text-muted"></i>
+        <p class="text-muted mt-3">Your cart is empty</p>
+        <button class="btn btn-primary" (click)="close()">Continue Shopping</button>
+      </div>
+
+      <div *ngFor="let item of cartItems" class="cart-item">
+        <div class="row align-items-center">
+          <div class="col-3">
+            <img [src]="item.image" class="img-fluid rounded" [alt]="item.name">
+          </div>
+          <div class="col-6">
+            <h6 class="mb-1">{{item.name}}</h6>
+            <small class="text-muted">{{item.unitOfMeasure}}</small>
+            <div class="d-flex align-items-center mt-2">
+              <button class="btn btn-sm btn-outline-secondary" 
+                      (click)="decreaseQty(item)"
+                      [disabled]="item.quantity <= 1">
+                -
+              </button>
+              <span class="mx-2">{{item.quantity}}</span>
+              <button class="btn btn-sm btn-outline-secondary" 
+                      (click)="increaseQty(item)"
+                      [disabled]="item.quantity >= item.maxQuantity">
+                +
+              </button>
+            </div>
+          </div>
+          <div class="col-3 text-end">
+            <p class="fw-bold mb-1" *ngIf="item.price > 0">
+              {{item.currencyCode}} {{item.price * item.quantity | number:'1.2-2'}}
+            </p>
+            <p class="fw-bold mb-1 text-muted" *ngIf="item.price === 0">N/A</p>
+            <button class="btn btn-sm btn-link text-danger p-0" (click)="removeItem(item)">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="cart-footer" *ngIf="cartItems.length > 0">
+      <div class="d-flex justify-content-between mb-3">
+        <h5>Total:</h5>
+        <h5 class="text-success" *ngIf="cartTotal > 0">KES {{cartTotal | number:'1.2-2'}}</h5>
+        <h5 class="text-muted" *ngIf="cartTotal === 0">N/A</h5>
+      </div>
+      <button class="btn btn-success w-100" (click)="goToCheckout()">
+        <i class="fa fa-check me-2"></i>
+        Proceed to Checkout
+      </button>
+    </div>
+
+  </div>
+</div>

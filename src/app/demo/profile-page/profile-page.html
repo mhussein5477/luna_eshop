@@ -1,0 +1,299 @@
+<div class="container py-4">
+
+  <!-- Loading State -->
+  <div *ngIf="isLoadingProfile" class="text-center py-5">
+    <app-loader-material></app-loader-material>
+    <p class="text-muted mt-3">Loading profile...</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!isLoadingProfile">
+    
+    <!-- HEADER -->
+    <div class="row mb-4">
+      <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+          <h3 class="fw-bold">Profile</h3>
+          <p class="text-muted">Manage your company details and preferences</p>
+        </div>
+        <button class="btn btn-outline-primary" (click)="toggleEdit()" [disabled]="isUpdatingProfile">
+          {{ editMode ? 'Cancel' : 'Edit Profile' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- PROFILE CARD -->
+    <div class="card p-4">
+
+      <!-- PROFILE PICTURE -->
+      <div class="mb-4 text-center">
+        <div class="profile-pic-wrapper mx-auto position-relative">
+          <!-- Display logo or initials -->
+          <img *ngIf="logoPreviewUrl" 
+               [src]="logoPreviewUrl" 
+               alt="Profile" 
+               class="profile-pic">
+          <div *ngIf="!logoPreviewUrl" class="profile-placeholder">
+            {{ getInitials(profile.name) }}
+          </div>
+
+          <!-- Edit overlay -->
+          <div *ngIf="editMode" class="profile-edit-overlay">
+            <label for="logoFileInput" class="profile-edit-btn">
+              <i class="fa fa-camera"></i>
+            </label>
+            <input type="file" 
+                   id="logoFileInput" 
+                   class="d-none" 
+                   accept="image/*"
+                   (change)="onLogoFileSelected($event)">
+          </div>
+
+          <!-- Remove logo button -->
+          <button *ngIf="editMode && logoPreviewUrl" 
+                  type="button" 
+                  class="btn btn-sm btn-danger remove-logo-btn"
+                  (click)="removeLogo()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+
+        <div *ngIf="editMode" class="mt-2">
+          <small class="text-muted">Click to upload new logo (JPG, PNG, GIF, WEBP - Max 5MB)</small>
+        </div>
+      </div>
+
+      <!-- COMPANY DETAILS GRID -->
+      <div class="row g-3 text-start">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Company Name <span class="text-danger" *ngIf="editMode">*</span></label>
+          <div *ngIf="!editMode" class="form-display">{{ profile.name || 'N/A' }}</div>
+          <input *ngIf="editMode" 
+                 type="text" 
+                 class="form-control" 
+                 [(ngModel)]="profile.name"
+                 placeholder="Enter company name">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Industry</label>
+          <div *ngIf="!editMode" class="form-display">{{ profile.industry || 'N/A' }}</div>
+          <input *ngIf="editMode" 
+                 type="text" 
+                 class="form-control" 
+                 [(ngModel)]="profile.industry"
+                 placeholder="e.g., Packaging & Logistics">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Registration / Tax ID (TIN)</label>
+          <div *ngIf="!editMode" class="form-display">{{ profile.tin || 'N/A' }}</div>
+          <input *ngIf="editMode" 
+                 type="text" 
+                 class="form-control" 
+                 [(ngModel)]="profile.tin"
+                 placeholder="e.g., P123456789">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Location</label>
+          <div *ngIf="!editMode" class="form-display">{{ profile.physicalAddress || 'N/A' }}</div>
+          <input *ngIf="editMode" 
+                 type="text" 
+                 class="form-control" 
+                 [(ngModel)]="profile.physicalAddress"
+                 placeholder="e.g., Nairobi, Kenya">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Phone <span class="text-danger" *ngIf="editMode">*</span></label>
+          <div *ngIf="!editMode" class="form-display">{{ profile.phoneNumber || 'N/A' }}</div>
+          <input *ngIf="editMode" 
+                 type="text" 
+                 class="form-control" 
+                 [(ngModel)]="profile.phoneNumber"
+                 placeholder="+254 712 345 678">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Email <span class="text-danger" *ngIf="editMode">*</span></label>
+          <div *ngIf="!editMode" class="form-display">{{ profile.emailAddress || 'N/A' }}</div>
+          <input *ngIf="editMode" 
+                 type="email" 
+                 class="form-control" 
+                 [(ngModel)]="profile.emailAddress"
+                 placeholder="info@company.com">
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label fw-semibold">Website</label>
+          <div *ngIf="!editMode" class="form-display">
+            <a *ngIf="profile.website" [href]="profile.website" target="_blank" class="text-primary">
+              {{ profile.website }}
+            </a>
+            <span *ngIf="!profile.website">N/A</span>
+          </div>
+          <input *ngIf="editMode" 
+                 type="text" 
+                 class="form-control" 
+                 [(ngModel)]="profile.website"
+                 placeholder="www.company.com">
+        </div>
+      </div>
+
+      <!-- SOCIAL LINKS -->
+      <div class="mt-4 text-start">
+        <label class="form-label fw-semibold">Social Media</label>
+        
+        <div *ngIf="!editMode" class="d-flex gap-2 align-items-center flex-wrap">
+          <!-- WhatsApp -->
+          <a *ngIf="getSocialLink('whatsapp')" 
+             [href]="getSocialLink('whatsapp')" 
+             target="_blank" 
+             class="btn btn-sm btn-success social-btn"
+             title="WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+
+          <!-- Instagram -->
+          <a *ngIf="getSocialLink('instagram')" 
+             [href]="getSocialLink('instagram')" 
+             target="_blank" 
+             class="btn btn-sm btn-danger social-btn"
+             title="Instagram">
+            <i class="fab fa-instagram"></i>
+          </a>
+
+          <!-- Twitter -->
+          <a *ngIf="getSocialLink('twitter')" 
+             [href]="getSocialLink('twitter')" 
+             target="_blank" 
+             class="btn btn-sm btn-info social-btn"
+             title="Twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+
+          <!-- Facebook -->
+          <a *ngIf="getSocialLink('facebook')" 
+             [href]="getSocialLink('facebook')" 
+             target="_blank" 
+             class="btn btn-sm btn-primary social-btn"
+             title="Facebook">
+            <i class="fab fa-facebook"></i>
+          </a>
+
+          <span *ngIf="!profile.whatsappAcc && !profile.instagramAcc && !profile.twitterAcc && !profile.facebookAcc" 
+                class="text-muted">
+            No social media links added
+          </span>
+        </div>
+
+        <div *ngIf="editMode" class="row g-2">
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="fab fa-whatsapp text-success"></i></span>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="profile.whatsappAcc"
+                     placeholder="WhatsApp number or link">
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="fab fa-instagram text-danger"></i></span>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="profile.instagramAcc"
+                     placeholder="Instagram username or link">
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="fab fa-twitter text-info"></i></span>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="profile.twitterAcc"
+                     placeholder="Twitter username or link">
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="fab fa-facebook text-primary"></i></span>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="profile.facebookAcc"
+                     placeholder="Facebook username or link">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREFERENCES GRID -->
+      <div class="row g-3 mt-4 text-start">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Theme Color</label>
+          <div class="d-flex align-items-center gap-2">
+            <input type="color" 
+                   class="form-control form-control-color" 
+                   [(ngModel)]="profile.themeColor" 
+                   (change)="updateThemeColor(profile.themeColor)"
+                   [disabled]="!editMode">
+            <span class="text-muted">{{ profile.themeColor }}</span>
+          </div>
+          <small class="text-muted">Pick your preferred accent color</small>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Language</label>
+          <select class="form-select" [(ngModel)]="language" [disabled]="!editMode">
+            <option value="en">English</option>
+            <option value="sw">Swahili</option>
+            <option value="fr">French</option>
+          </select>
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label fw-semibold">Notifications</label>
+          <div class="d-flex gap-4">
+            <div class="form-check">
+              <input class="form-check-input" 
+                     type="checkbox" 
+                     [(ngModel)]="profile.isEmailNotify" 
+                     id="notifyEmail"
+                     [disabled]="!editMode">
+              <label class="form-check-label" for="notifyEmail">
+                <i class="fa fa-envelope me-1"></i> Email Notifications
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" 
+                     type="checkbox" 
+                     [(ngModel)]="profile.isSmsNotify" 
+                     id="notifySMS"
+                     [disabled]="!editMode">
+              <label class="form-check-label" for="notifySMS">
+                <i class="fa fa-sms me-1"></i> SMS Notifications
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVE CHANGES -->
+      <div class="mt-4 text-center" *ngIf="editMode">
+        <button class="btn btn-success btn-lg px-5" 
+                (click)="saveChanges()"
+                [disabled]="isUpdatingProfile || isUploadingLogo">
+          <app-loader-material *ngIf="isUpdatingProfile || isUploadingLogo"></app-loader-material>
+          <i *ngIf="!isUpdatingProfile && !isUploadingLogo" class="fa fa-save me-2"></i>
+          <span>{{ (isUpdatingProfile || isUploadingLogo) ? 'Saving...' : 'Save Changes' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

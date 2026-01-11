@@ -1,0 +1,24 @@
+:root {
+  --primary-color: #0d6efd;
+}
+
+.profile-pic {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border: 3px solid var(--primary-color);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: darken(var(--primary-color), 10%);
+  border-color: darken(var(--primary-color), 10%);
+}
+
+.card {
+  border-radius: 1rem;
+}

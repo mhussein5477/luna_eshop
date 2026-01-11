@@ -1,0 +1,105 @@
+.card {
+  border-radius: 12px;
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+ 
+
+.text-warning {
+  color: #fbbf24 !important;
+}
+
+
+
+   .badge {
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .order-card {
+    border-radius: 12px;
+  }
+
+  .timeline {
+    background: #f8f9fa;
+    padding: 8px 10px;
+    border-radius: 6px;
+
+    span {
+      font-size: 0.8rem;
+
+      &.timeline-done {
+        font-weight: 600;
+      }
+      &.timeline-pending {
+        opacity: 0.6;
+      }
+    }
+  }
+  .bg-success{
+  background-color: rgb(176, 249, 230) !important;
+  }
+  .bg-danger{
+    background-color: rgb(249, 176, 176) !important;
+  }
+
+  details summary {
+    cursor: pointer;
+  }
+
+
+.badge {
+  cursor: pointer;
+  background: #e9ecef;
+  color: #333;
+  border-radius: 20px;
+  transition: 0.2s ease;
+ 
+}
+
+.badge:hover {
+  background: #d5d5d5;
+}
+
+ .active-pill {
+  background: #0d6efd !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.badge-transit {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+.badge-completed {
+  background-color: #198754;
+  color: #fff;
+}
+
+.badge-cancelled {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.badge-default {
+  background-color: #6c757d;
+  color: #fff;
+}
+.form-label{
+    font-size: 12px;
+}
+.form-control{
+    font-size: 12px;
+
+}
+
