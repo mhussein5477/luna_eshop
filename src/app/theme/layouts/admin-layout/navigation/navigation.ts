@@ -23,21 +23,18 @@ export interface NavigationItem {
   action?: () => void; 
 }
 
-// ❌ DON'T DO THIS - inject() at top level
-// const router = inject(Router);
-// const authService = inject(AuthSessionService);
-
-// ✅ DO THIS - Create a factory function that gets services when needed
+// ✅ Proper factory function for logout
 export function getLogoutAction(): () => void {
   return () => {
     const router = inject(Router);
     const authService = inject(AuthSessionService);
     
-    authService.logout();   // clear sessionStorage
-    router.navigate(['/login']); // redirect
+    authService.logout(); // clear session
+    router.navigate(['/login']); // absolute path
   };
 }
 
+// ✅ Fixed NavigationItems with absolute paths
 export const NavigationItems: NavigationItem[] = [
   {
     id: 'dashboard',
@@ -50,7 +47,7 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Dashboard',
         type: 'item',
         classes: 'nav-item',
-        url: '/dashboard/default',
+        url: '/admin/dashboard/default', // ✅ absolute path
         icon: 'dashboard',
         breadcrumbs: false
       },
@@ -59,7 +56,7 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Orders',
         type: 'item',
         classes: 'nav-item',
-        url: '/orders',
+        url: '/admin/orders', // ✅ absolute path
         icon: 'profile',
         breadcrumbs: false
       },  
@@ -68,7 +65,7 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Products',
         type: 'item',
         classes: 'nav-item',
-        url: '/products',
+        url: '/admin/products', // ✅ absolute path
         icon: 'wallet',
         breadcrumbs: false
       },
@@ -77,14 +74,14 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Report',
         type: 'item',
         classes: 'nav-item',
-        url: '/reports',
+        url: '/admin/reports', // ✅ absolute path
         icon: 'unordered-list',
         breadcrumbs: false
       }
     ]
   },
   {
-    id: 'desitributors',
+    id: 'distributors',
     title: 'Admin Operations',
     type: 'group',
     icon: 'icon-navigation',
@@ -94,7 +91,7 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Clients',
         type: 'item',
         classes: 'nav-item',
-        url: '/clients',
+        url: '/admin/clients', // ✅ absolute path
         icon: 'profile', 
         breadcrumbs: false
       },
@@ -111,7 +108,7 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Profile',
         type: 'item',
         classes: 'nav-item',
-        url: '/profile',
+        url: '/admin/profile', // ✅ absolute path
         icon: 'user', 
         breadcrumbs: false
       },
@@ -120,9 +117,18 @@ export const NavigationItems: NavigationItem[] = [
         title: 'Settings',
         type: 'item',
         classes: 'nav-item',
-        url: '/settings',
+        url: '/admin/settings', // ✅ absolute path
         icon: 'setting', 
         breadcrumbs: false
+      },
+      {
+        id: 'logout',
+        title: 'Logout',
+        type: 'item',
+        classes: 'nav-item',
+        icon: 'log-out',
+        breadcrumbs: false,
+        action: getLogoutAction() // ✅ properly uses inject()
       }
     ]
   },

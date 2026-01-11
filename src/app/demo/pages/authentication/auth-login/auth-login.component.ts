@@ -136,7 +136,8 @@ export class AuthLoginComponent {
 
           this.isLoadingLogin = false;
           this.isSubmitting = false;
-          this.router.navigate(['./dashboard/default']);
+          this.router.navigate(['/admin/dashboard/default']);
+
         }
       },
 

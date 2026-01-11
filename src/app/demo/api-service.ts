@@ -11,7 +11,7 @@ import { catchError, finalize } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class ApiService {
-  private baseUrl = 'api.lunapackagingltd.co.ke';
+  private baseUrl = 'https://api.lunapackagingltd.co.ke/api/';
 
   constructor(private http: HttpClient) {}
 
