@@ -70,7 +70,7 @@ export class NavContentComponent implements OnInit {
    */
   private setupLogoutAction() {
     const authGroup = this.navigations.find(nav => nav.id === 'authentication');
-    const logoutItem = authGroup?.children?.find(child => child.id === 'login');
+    const logoutItem = authGroup?.children?.find(child => child.id === 'logout');
     
     if (logoutItem) {
       logoutItem.action = () => {
@@ -87,23 +87,66 @@ export class NavContentComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Build navigation based on user role
+   * 
+   * ROLE_ADMIN sees: Dashboard, Clients, Settings, Logout
+   * ROLE_CLIENT sees: Dashboard, Orders, Products, Reports, Profile, Settings, Logout
+   */
   private buildNavigation() {
-  if (this.authService.role === 'ROLE_ADMIN') {
-  this.navigations = NavigationItems;
-  return;
-}
+    const userRole = this.authService.role;
 
-
-    this.navigations = NavigationItems
-      .map(group => {
-        if (group.id === 'desitributors' && group.children) {
-          const filteredChildren = group.children.filter(item => item.id !== 'clients');
-          if (filteredChildren.length === 0) return null;
-          return { ...group, children: filteredChildren };
-        }
-        return group;
-      })
-      .filter(Boolean) as NavigationItem[];
+    if (userRole === 'ROLE_ADMIN') {
+      // ADMIN sees: Dashboard, Clients, Settings, Logout
+      this.navigations = NavigationItems
+        .map(group => {
+          if (group.id === 'dashboard' && group.children) {
+            // Keep only Dashboard from this group
+            const filteredChildren = group.children.filter(item => item.id === 'default');
+            if (filteredChildren.length === 0) return null;
+            return { ...group, children: filteredChildren };
+          }
+          
+          if (group.id === 'distributors') {
+            // Keep the entire Admin Operations group (has Clients)
+            return group;
+          }
+          
+          if (group.id === 'authentication' && group.children) {
+            // Keep only Settings and Logout (no Profile)
+            const filteredChildren = group.children.filter(item => 
+              item.id === 'settings' || item.id === 'logout'
+            );
+            if (filteredChildren.length === 0) return null;
+            return { ...group, children: filteredChildren };
+          }
+          
+          return group;
+        })
+        .filter(Boolean) as NavigationItem[];
+    } else {
+      // CLIENT sees: Dashboard, Orders, Products, Reports, Profile, Settings, Logout
+      this.navigations = NavigationItems
+        .map(group => {
+          if (group.id === 'dashboard') {
+            // Keep all items in dashboard group (Dashboard, Orders, Products, Reports)
+            return group;
+          }
+          
+          if (group.id === 'distributors') {
+            // Remove entire Admin Operations group (has Clients)
+            return null;
+          }
+          
+          if (group.id === 'authentication') {
+            // Keep all items (Profile, Settings, Logout)
+            return group;
+          }
+          
+          return group;
+        })
+        .filter(Boolean) as NavigationItem[];
+    }
   }
 
   fireOutClick() {
@@ -138,6 +181,6 @@ export class NavContentComponent implements OnInit {
    * Handle navigation click for items with an action
    */
   onNavItemClick(item: NavigationItem) {
-  console.log(item)
+    console.log(item);
   }
 }

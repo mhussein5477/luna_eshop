@@ -274,8 +274,7 @@ Total Amount: KES ${this.cartTotal.toFixed(2)}
 
 ━━━━━━━━━━━━━━━━━━━━━
 🚚 Status: Pending Confirmation
-
-Powered by Luna Packaging Ltd.
+ 
 `.trim();
 }
 

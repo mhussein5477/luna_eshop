@@ -38,7 +38,7 @@ export function getLogoutAction(): () => void {
 export const NavigationItems: NavigationItem[] = [
   {
     id: 'dashboard',
-    title: 'Distributor operations',
+    title: 'Client Operations',
     type: 'group',
     icon: 'icon-navigation',
     children: [
