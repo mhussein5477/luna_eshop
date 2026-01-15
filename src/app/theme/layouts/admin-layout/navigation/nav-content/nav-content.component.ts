@@ -88,13 +88,14 @@ export class NavContentComponent implements OnInit {
   }
 
   /**
-   * Build navigation based on user role
+   * Build navigation based on user role and order permissions
    * 
    * ROLE_ADMIN sees: Dashboard, Clients, Settings, Logout
-   * ROLE_CLIENT sees: Dashboard, Orders, Products, Reports, Profile, Settings, Logout
+   * ROLE_CLIENT sees: Dashboard, Orders (if isPortalOrder = 1), Products, Reports, Profile, Settings, Logout
    */
   private buildNavigation() {
     const userRole = this.authService.role;
+    const isPortalOrder = this.authService.isPortalOrder;
 
     if (userRole === 'ROLE_ADMIN') {
       // ADMIN sees: Dashboard, Clients, Settings, Logout
@@ -125,12 +126,22 @@ export class NavContentComponent implements OnInit {
         })
         .filter(Boolean) as NavigationItem[];
     } else {
-      // CLIENT sees: Dashboard, Orders, Products, Reports, Profile, Settings, Logout
+      // CLIENT sees: Dashboard, Orders (if isPortalOrder = 1), Products, Reports, Profile, Settings, Logout
       this.navigations = NavigationItems
         .map(group => {
-          if (group.id === 'dashboard') {
-            // Keep all items in dashboard group (Dashboard, Orders, Products, Reports)
-            return group;
+          if (group.id === 'dashboard' && group.children) {
+            // Filter children based on isPortalOrder
+            const filteredChildren = group.children.filter(item => {
+              // Show Orders only if isPortalOrder is 1
+              if (item.id === 'orders') {
+                return isPortalOrder;
+              }
+              // Show all other items (Dashboard, Products, Reports)
+              return true;
+            });
+            
+            if (filteredChildren.length === 0) return null;
+            return { ...group, children: filteredChildren };
           }
           
           if (group.id === 'distributors') {

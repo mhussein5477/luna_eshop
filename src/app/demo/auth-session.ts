@@ -4,12 +4,14 @@ import { jwtDecode } from 'jwt-decode';
 export interface JwtUser {
   emailAddress: string;
   phoneNumber: string;
-    role: string;
+  role: string;
   clientId: string;
   clientName: string;
   clientEmail: string;
   fullName: string;
   clientPhoneNumber: string;
+  isWhatsappOrder: number;
+  isPortalOrder: number;
 }
 
 export interface JwtPayload {
@@ -72,10 +74,18 @@ export class AuthSessionService {
   }
 
   // 🔹 User role
-get role(): string | null {
-  return this.decodeToken()?.user?.role || null;
-}
+  get role(): string | null {
+    return this.decodeToken()?.user?.role || null;
+  }
 
+  // 🔹 Order type access
+  get isWhatsappOrder(): boolean {
+    return this.decodeToken()?.user?.isWhatsappOrder === 1;
+  }
+
+  get isPortalOrder(): boolean {
+    return this.decodeToken()?.user?.isPortalOrder === 1;
+  }
 
   // 🔹 Token expiry checks
   isTokenExpired(): boolean {

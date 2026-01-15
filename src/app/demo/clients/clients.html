@@ -121,6 +121,25 @@
                   </button>
                 </div>
                 <div class="col-md-4 mt-2"><strong>Total Products:</strong> {{client?.totalProducts}}</div>
+
+                <!-- Order Type Indicators -->
+                <div class="col-md-12 mt-3">
+                  <strong>Order Types:</strong>
+                  <div class="d-inline-flex gap-2 ms-2">
+                    <span class="badge" 
+                          [ngClass]="client.isWhatsappOrder ? 'bg-success' : 'bg-secondary'"
+                          [style.opacity]="client.isWhatsappOrder ? '1' : '0.5'">
+                      <i class="bi bi-whatsapp me-1"></i>
+                      WhatsApp {{ client.isWhatsappOrder ? '✓' : '✗' }}
+                    </span>
+                    <span class="badge" 
+                          [ngClass]="client.isPortalOrder ? 'bg-primary' : 'bg-secondary'"
+                          [style.opacity]="client.isPortalOrder ? '1' : '0.5'">
+                      <i class="bi bi-globe me-1"></i>
+                      Portal {{ client.isPortalOrder ? '✓' : '✗' }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -289,20 +308,48 @@
                      [disabled]="modalMode==='view'">
             </div>
 
-            <div class="col-md-12 d-flex align-items-center gap-4">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox"
-                       [(ngModel)]="activeClient.isEmailNotify"
-                       name="emailNotify"
-                       [disabled]="modalMode==='view'">
-                <label class="form-check-label">Email Notifications</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox"
-                       [(ngModel)]="activeClient.isSmsNotify"
-                       name="smsNotify"
-                       [disabled]="modalMode==='view'">
-                <label class="form-check-label">SMS Notifications</label>
+            <!-- Notification and Order Settings -->
+            <div class="col-md-12">
+              <h6 class="fw-semibold mb-3 text-secondary">Notification & Order Settings</h6>
+              <div class="row">
+                <div class="col-md-6 d-flex align-items-center gap-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           [(ngModel)]="activeClient.isEmailNotify"
+                           name="emailNotify"
+                           [disabled]="modalMode==='view'">
+                    <label class="form-check-label">Email Notifications</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           [(ngModel)]="activeClient.isSmsNotify"
+                           name="smsNotify"
+                           [disabled]="modalMode==='view'">
+                    <label class="form-check-label">SMS Notifications</label>
+                  </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-center gap-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           [(ngModel)]="activeClient.isWhatsappOrder"
+                           name="whatsappOrder"
+                           [disabled]="modalMode==='view'">
+                    <label class="form-check-label">
+                      <i class="bi bi-whatsapp text-success me-1"></i>
+                      WhatsApp Orders
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           [(ngModel)]="activeClient.isPortalOrder"
+                           name="portalOrder"
+                           [disabled]="modalMode==='view'">
+                    <label class="form-check-label">
+                      <i class="bi bi-globe text-primary me-1"></i>
+                      Portal Orders
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
 

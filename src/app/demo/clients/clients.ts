@@ -76,6 +76,8 @@ export class ClientsComponent {
     themeColor: '#6750A4', 
     isEmailNotify: 0, 
     isSmsNotify: 0,
+    isWhatsappOrder: 0,
+    isPortalOrder: 0,
     logo: null, // Logo URL from backend
     userDetails: {
       id: null,
@@ -441,6 +443,8 @@ export class ClientsComponent {
       themeColor: clientToSend.themeColor,
       isEmailNotify: clientToSend.isEmailNotify ? 1 : 0,
       isSmsNotify: clientToSend.isSmsNotify ? 1 : 0,
+      isWhatsappOrder: clientToSend.isWhatsappOrder ? 1 : 0,
+      isPortalOrder: clientToSend.isPortalOrder ? 1 : 0,
     };
 
     // Add user details only for add mode
@@ -565,6 +569,8 @@ export class ClientsComponent {
       themeColor: '#6750A4', 
       isEmailNotify: 0, 
       isSmsNotify: 0,
+      isWhatsappOrder: 0,
+      isPortalOrder: 0,
       logo: null,
       userDetails: {
         id: null,
