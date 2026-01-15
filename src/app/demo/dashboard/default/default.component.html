@@ -6,7 +6,9 @@
       <i class="fa fa-chart-line me-2"></i>
       Dashboard
     </h3>
-    <p class="text-muted">Welcome back, {{ clientName }}! Here's your overview.</p>
+    <p class="text-muted">
+      {{ isAdmin ? 'Admin Overview - System-wide statistics' : 'Welcome back, ' + clientName + '! Here\'s your overview.' }}
+    </p>
   </div>
 
   <!-- LOADING STATE -->
@@ -17,10 +19,170 @@
     <p class="text-muted mt-3">Loading dashboard data...</p>
   </div>
 
-  <!-- DASHBOARD CONTENT -->
-  <div *ngIf="!isLoading">
+  <!-- ========================================
+       ADMIN DASHBOARD VIEW
+  ======================================== -->
+  <div *ngIf="!isLoading && isAdmin">
 
-    <!-- ANALYTICS CARDS -->
+    <!-- ADMIN ANALYTICS CARDS -->
+    <div class="row g-3 mb-4">
+      
+      <!-- Total Clients -->
+      <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="text-muted mb-0 fw-normal">Total Clients</h6>
+              </div>
+              <div class="bg-primary bg-opacity-10 p-2 rounded">
+                <i class="fa fa-users text-primary"></i>
+              </div>
+            </div>
+            <h2 class="mb-2">{{ adminStats.totalClients }}</h2>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                <i class="fa fa-check"></i>
+                {{ calculatePercentage(adminStats.activeClients, adminStats.totalClients) }}% Active
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Products -->
+      <!-- <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="text-muted mb-0 fw-normal">Total Products</h6>
+              </div>
+              <div class="bg-info bg-opacity-10 p-2 rounded">
+                <i class="fa fa-box text-info"></i>
+              </div>
+            </div>
+            <h2 class="mb-2">{{ adminStats.totalProducts }}</h2>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-info bg-opacity-10 text-info border border-info">
+                <i class="fa fa-layer-group"></i>
+                System-wide
+              </span>
+            </div>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Total Orders -->
+      <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="text-muted mb-0 fw-normal">Total Orders</h6>
+              </div>
+              <div class="bg-warning bg-opacity-10 p-2 rounded">
+                <i class="fa fa-shopping-cart text-warning"></i>
+              </div>
+            </div>
+            <h2 class="mb-2">{{ adminStats.totalOrders }}</h2>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">
+                <i class="fa fa-chart-line"></i>
+                All clients
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Revenue -->
+      <!-- <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="text-muted mb-0 fw-normal">Total Revenue</h6>
+              </div>
+              <div class="bg-success bg-opacity-10 p-2 rounded">
+                <i class="fa fa-money-bill text-success"></i>
+              </div>
+            </div>
+            <h2 class="mb-2">{{ formatCurrency(adminStats.totalRevenue) }}</h2>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                <i class="fa fa-dollar-sign"></i>
+                System-wide
+              </span>
+            </div>
+          </div>
+        </div>
+      </div> -->
+
+    </div>
+
+    <div class="row g-3">
+      
+      <!-- RECENT CLIENTS -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0">
+              <i class="fa fa-users me-2"></i>
+              Recent Clients
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div *ngIf="recentClients.length === 0" class="text-center py-5 text-muted">
+              <i class="fa fa-users fa-3x mb-3 opacity-25"></i>
+              <p>No clients found</p>
+            </div>
+            <div *ngIf="recentClients.length > 0" class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>CLIENT NAME</th>
+                    <th>CODE</th>
+                    <th>EMAIL</th>
+                    <th>PHONE</th>
+                    <th>STATUS</th>
+                    <th>JOINED</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let client of recentClients">
+                    <td><strong>{{ client.name }}</strong></td>
+                    <td><code class="text-muted">{{ client.clientCode }}</code></td>
+                    <td>{{ client.emailAddress }}</td>
+                    <td>{{ client.phoneNumber }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getStatusBadgeClass(client.status)">
+                        {{ client.status }}
+                      </span>
+                    </td>
+                    <td>{{ formatDate(client.createdAt) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+     
+
+    </div>
+
+   
+
+  </div>
+
+  <!-- ========================================
+       CLIENT DASHBOARD VIEW (UNCHANGED)
+  ======================================== -->
+  <div *ngIf="!isLoading && !isAdmin">
+
+    <!-- CLIENT ANALYTICS CARDS -->
     <div class="row g-3 mb-4">
       
       <!-- Total Products -->
@@ -95,15 +257,12 @@
         </div>
       </div>
 
-     
     </div>
 
     <div class="row g-3">
       
       <!-- CHARTS SECTION -->
       <div class="col-lg-8">
-        
-      
 
         <!-- Order Status Distribution -->
         <div class="card border-0 shadow-sm">
@@ -175,8 +334,6 @@
           </div>
         </div>
 
-
-
       </div>
     </div>
 
@@ -202,8 +359,8 @@
                     <th>ORDER ID</th>
                     <th>CUSTOMER</th>
                     <th>STATUS</th>
-                    <th>DATE & TIME</th>
-                    <th class="text-end">AMOUNT</th>
+                    <!-- <th>DATE & TIME</th> -->
+                    <!-- <th class="text-end">AMOUNT</th> -->
                   </tr>
                 </thead>
                 <tbody>
@@ -217,13 +374,13 @@
                         {{ order.orderStatus }}
                       </span>
                     </td>
-                    <td>
+                    <!-- <td>
                       <div>{{ formatDate(order.createdAt) }}</div>
                       <small class="text-muted">{{ formatTime(order.createdAt) }}</small>
-                    </td>
-                    <td class="text-end">
+                    </td> -->
+                    <!-- <td class="text-end">
                       <strong class="text-success">{{ formatCurrency(order.totalAmount) }}</strong>
-                    </td>
+                    </td> -->
                   </tr>
                 </tbody>
               </table>
@@ -288,28 +445,28 @@
       </div>
     </div>
 
-            <!-- Featured Products -->
-        <div class="card border-0 shadow-sm" *ngIf="featuredProducts.length > 0">
-          <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0">
-              <i class="fa fa-star me-2"></i>
-              Featured Products
-            </h5>
+    <!-- Featured Products -->
+    <div class="card border-0 shadow-sm" *ngIf="featuredProducts.length > 0">
+      <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0">
+          <i class="fa fa-star me-2"></i>
+          Featured Products
+        </h5>
+      </div>
+      <div class="card-body p-2">
+        <div *ngFor="let product of featuredProducts" class="d-flex align-items-center gap-2 p-2 rounded hover-bg">
+          <img [src]="getProductImage(product)" 
+               [alt]="product.name"
+               class="rounded"
+               style="width: 50px; height: 50px; object-fit: cover;">
+          <div class="flex-grow-1">
+            <h6 class="mb-0 small">{{ product.name }}</h6>
+            <small class="text-success fw-bold">{{ formatCurrency(product.unitPrice) }}</small>
           </div>
-          <div class="card-body p-2">
-            <div *ngFor="let product of featuredProducts" class="d-flex align-items-center gap-2 p-2 rounded hover-bg">
-              <img [src]="getProductImage(product)" 
-                   [alt]="product.name"
-                   class="rounded"
-                   style="width: 50px; height: 50px; object-fit: cover;">
-              <div class="flex-grow-1">
-                <h6 class="mb-0 small">{{ product.name }}</h6>
-                <small class="text-success fw-bold">{{ formatCurrency(product.unitPrice) }}</small>
-              </div>
-              <i class="fa fa-star text-warning"></i>
-            </div>
-          </div>
+          <i class="fa fa-star text-warning"></i>
         </div>
+      </div>
+    </div>
   </div>
 
 </div>

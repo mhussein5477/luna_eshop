@@ -188,7 +188,8 @@
                 {{ order.client?.phone || order.customerPhone }}
               </div>
 
-              <h6 class="fw-bold mb-3">KES {{ order.price || order.totalAmount || 0 }}</h6>
+              <!-- ✅ FIXED: Use getOrderTotal() instead of order.price -->
+              <h6 class="fw-bold mb-3">{{ order.currencyCode || 'KES' }} {{ getOrderTotal(order) | number:'1.2-2' }}</h6>
 
               <div class="dropdown w-100 mb-2">
                 <button 
@@ -289,7 +290,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
-      <!-- ✅ MODAL BODY (THIS WAS MISSING) -->
+      <!-- MODAL BODY -->
 <div class="modal-body">
 
   <!-- CUSTOMER DETAILS -->
@@ -390,7 +391,7 @@
 
           <div class="text-end">
             <div class="fw-bold">
-              KES {{ item.unitPrice * item.quantity }}
+              KES {{ item.unitPrice * item.quantity | number:'1.2-2' }}
             </div>
 
             <button *ngIf="modalMode !== 'view'"
@@ -405,7 +406,7 @@
 
       <div class="d-flex justify-content-end mt-3">
         <h6 class="fw-bold mb-0">
-          Total: KES {{ orderTotal }}
+          Total: KES {{ orderTotal | number:'1.2-2' }}
         </h6>
       </div>
     </div>

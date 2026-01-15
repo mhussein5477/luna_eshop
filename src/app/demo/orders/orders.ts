@@ -55,7 +55,6 @@ export class Orders implements OnDestroy {
   selectedOrder: any = null;
   isDevMode = false;
 
-
   // Search debouncers
   private orderNoSubject = new Subject<string>();
   private customerNameSubject = new Subject<string>();
@@ -77,7 +76,7 @@ export class Orders implements OnDestroy {
     customerName: '',
     customerPhone: '',
     createdDate: '',
-     clientId: ''
+    clientId: ''
   };
 
   filters = {
@@ -107,7 +106,10 @@ export class Orders implements OnDestroy {
     'Delivered'
   ];
 
-  constructor(private apiService: ApiService ,  private authSession: AuthSessionService  ) {
+  constructor(
+    private apiService: ApiService,
+    private authSession: AuthSessionService
+  ) {
     // Setup debounced searches
     this.orderNoSubject.pipe(
       debounceTime(500),
@@ -138,24 +140,22 @@ export class Orders implements OnDestroy {
   }
 
   ngOnInit() {
-    this.attachClientIdToSearch()
+    this.attachClientIdToSearch();
     this.loadOrders();
     this.loadProducts();
     this.checkDevMode();
-
   }
 
   private attachClientIdToSearch() {
-  const clientId = this.authSession.clientId;
+    const clientId = this.authSession.clientId;
 
-  if (!clientId) {
-    console.error('Client ID missing from token');
-    return;
+    if (!clientId) {
+      console.error('Client ID missing from token');
+      return;
+    }
+
+    this.searchPayload.clientId = clientId;
   }
-
-  this.searchPayload.clientId = clientId;
-}
-
 
   ngOnDestroy() {
     this.orderNoSubject.complete();
@@ -178,6 +178,21 @@ export class Orders implements OnDestroy {
   get orderTotal(): number {
     return this.activeOrder.products.reduce((sum: number, item: OrderItem) => {
       return sum + ((item.unitPrice || 0) * item.quantity);
+    }, 0);
+  }
+
+  /**
+   * Calculate order total from items (in case backend doesn't return it)
+   */
+  getOrderTotal(order: any): number {
+    if (!order.items || order.items.length === 0) {
+      return order.totalAmount || 0;
+    }
+    
+    return order.items.reduce((sum: number, item: any) => {
+      const unitPrice = item.unitPrice || 0;
+      const qty = item.qty || item.quantity || 0;
+      return sum + (unitPrice * qty);
     }, 0);
   }
 
@@ -208,10 +223,9 @@ export class Orders implements OnDestroy {
     this.selectedFilter = filter;
   }
 
-checkDevMode() {
-  this.isDevMode = this.authSession.role === 'ROLE_ADMIN';
-}
-
+  checkDevMode() {
+    this.isDevMode = this.authSession.role === 'ROLE_ADMIN';
+  }
 
   // Load orders with their items
   loadOrders() {
@@ -266,16 +280,23 @@ checkDevMode() {
         this.orders = orders.map((order: any, index: number) => {
           const itemsData = responses[index]?.data ?? [];
           
+          const items = itemsData.map((item: any) => ({
+            productId: item.productId,
+            productName: item.product?.name || item.name || 'Unknown Product',
+            qty: item.quantity || item.qty || 0,
+            unitPrice: item.unitPrice || item.price || 0
+          }));
+
+          // ✅ Calculate total from items
+          const calculatedTotal = items.reduce((sum: number, item: any) => {
+            return sum + (item.unitPrice * item.qty);
+          }, 0);
+          
           return {
             id: order.id,
             orderNo: order.orderNumber,
-            items: itemsData.map((item: any) => ({
-              productId: item.productId,
-              productName: item.product.name || item.name,
-              qty: item.quantity || item.qty,
-              unitPrice: item.unitPrice || item.price
-            })),
-            totalAmount: order.totalAmount || 0,
+            items: items,
+            totalAmount: calculatedTotal || order.totalAmount || 0, // ✅ Use calculated total first
             currencyCode: order.currencyCode || 'KES',
             createdDate: order.orderedAt || order.createdAt,
             status: order.orderStatus || 'PENDING',
@@ -331,7 +352,8 @@ checkDevMode() {
       pageSize: 100,
       sortBy: 'name',
       sortDir: 'ASC',
-      name: ''
+      name: '',
+      clientId: this.authSession.clientId || ''
     };
 
     this.apiService.searchProducts(payload).subscribe({
@@ -540,53 +562,50 @@ checkDevMode() {
   }
 
   // Change order status
-changeOrderStatus(order: any, status: string) {
-  if (!order?.id) {
-    console.error('Order ID is missing');
-    return;
-  }
-
-  this.isLoadingOrders = true;
-
-  const payload = {
-    status: status,
-    paymentMethod: order.paymentMethod ?? '',
-    orderId: order.id ?? '',
-
-    paymentReference: order.paymentReference ?? '',
-    shippingProvider: order.shippingProvider ?? '',
-    trackingNumber: order.trackingNumber ?? ''
-  };
-
-  this.apiService.changeOrderStatus(order.id, payload).subscribe({
-    next: () => {
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: `Order status updated to ${status}`,
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true
-      });
-      this.loadOrders();
-    },
-    error: (err) => {
-      console.error('Failed to update order status', err);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'error',
-        title: 'Failed to update order status',
-        showConfirmButton: false,
-        timer: 2000
-      });
-      this.isLoadingOrders = false;
+  changeOrderStatus(order: any, status: string) {
+    if (!order?.id) {
+      console.error('Order ID is missing');
+      return;
     }
-  });
-}
 
+    this.isLoadingOrders = true;
 
+    const payload = {
+      status: status,
+      paymentMethod: order.paymentMethod ?? '',
+      orderId: order.id ?? '',
+      paymentReference: order.paymentReference ?? '',
+      shippingProvider: order.shippingProvider ?? '',
+      trackingNumber: order.trackingNumber ?? ''
+    };
+
+    this.apiService.changeOrderStatus(order.id, payload).subscribe({
+      next: () => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Order status updated to ${status}`,
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true
+        });
+        this.loadOrders();
+      },
+      error: (err) => {
+        console.error('Failed to update order status', err);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Failed to update order status',
+          showConfirmButton: false,
+          timer: 2000
+        });
+        this.isLoadingOrders = false;
+      }
+    });
+  }
 
   // Action methods
   markConfirmed(order: any) {

@@ -16,6 +16,15 @@ interface DashboardStats {
   averageOrderValue: number;
 }
 
+interface AdminStats {
+  totalClients: number;
+  activeClients: number;
+  inactiveClients: number;
+  totalProducts: number;
+  totalOrders: number;
+  totalRevenue: number;
+}
+
 interface RecentOrder {
   id: string;
   orderNumber: string;
@@ -36,6 +45,16 @@ interface TopProduct {
   isFeatured: number;
 }
 
+interface ClientInfo {
+  id: string;
+  name: string;
+  clientCode: string;
+  emailAddress: string;
+  phoneNumber: string;
+  status: string;
+  createdAt: string;
+}
+
 @Component({
   selector: 'app-default',
   standalone: true,
@@ -48,7 +67,9 @@ export class DefaultComponent implements OnInit {
   clientId: string | null = null;
   clientName: string | null = null;
   isLoading = true;
+  isAdmin = false;
 
+  // Client dashboard stats
   stats: DashboardStats = {
     totalProducts: 0,
     activeProducts: 0,
@@ -61,9 +82,20 @@ export class DefaultComponent implements OnInit {
     averageOrderValue: 0
   };
 
+  // Admin dashboard stats
+  adminStats: AdminStats = {
+    totalClients: 0,
+    activeClients: 0,
+    inactiveClients: 0,
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0
+  };
+
   recentOrders: RecentOrder[] = [];
   topProducts: TopProduct[] = [];
   featuredProducts: TopProduct[] = [];
+  recentClients: ClientInfo[] = [];
 
   // Chart data
   monthlyOrdersData: { month: string; count: number }[] = [];
@@ -77,14 +109,135 @@ export class DefaultComponent implements OnInit {
   ngOnInit() {
     this.clientId = this.authService.clientId;
     this.clientName = this.authService.clientName;
-    this.loadDashboardData();
+    this.isAdmin = this.authService.role === 'ROLE_ADMIN';
+    
+    if (this.isAdmin) {
+      this.loadAdminDashboard();
+    } else {
+      this.loadClientDashboard();
+    }
   }
 
-  
-  loadDashboardData() {
+  /**
+   * Load dashboard for ADMIN users
+   */
+  loadAdminDashboard() {
     this.isLoading = true;
 
-    // Prepare payloads
+    const clientsPayload = {
+      pageNo: 0,
+      pageSize: 100,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+      name: '',
+      emailAddress: '',
+      phoneNumber: ''
+    };
+
+    const productsPayload = {
+      pageNo: 0,
+      pageSize: 1000,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+      name: '',
+      clientId: '' // Admin sees all products
+    };
+
+    const ordersPayload = {
+      pageNo: 0,
+      pageSize: 1000,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+      clientId: '' // Admin sees all orders
+    };
+
+    forkJoin({
+      clients: this.apiService.searchClients(clientsPayload),
+      products: this.apiService.searchProducts(productsPayload),
+      orders: this.apiService.searchOrders(ordersPayload)
+    }).subscribe({
+      next: (results) => {
+        this.processAdminClientsData(results.clients);
+        this.processAdminProductsData(results.products);
+        this.processAdminOrdersData(results.orders);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading admin dashboard:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  processAdminClientsData(response: any) {
+    const clients = response.data || [];
+    const totalElements = response.pageDetail?.totalElements || clients.length;
+
+    this.adminStats.totalClients = totalElements;
+    this.adminStats.activeClients = clients.filter((c: any) => c.status === 'ACTIVE').length;
+    this.adminStats.inactiveClients = clients.filter((c: any) => c.status === 'INACTIVE').length;
+
+    // Get recent clients
+    this.recentClients = clients.slice(0, 5).map((client: any) => ({
+      id: client.id,
+      name: client.name,
+      clientCode: client.clientCode,
+      emailAddress: client.emailAddress,
+      phoneNumber: client.phoneNumber,
+      status: client.status,
+      createdAt: client.createdAt
+    }));
+  }
+
+  processAdminProductsData(response: any) {
+    const products = response.data || [];
+    const totalElements = response.pageDetail?.totalElements || products.length;
+
+    this.adminStats.totalProducts = totalElements;
+  }
+
+  processAdminOrdersData(response: any) {
+    const orders = response.data || [];
+    const totalElements = response.pageDetail?.totalElements || orders.length;
+
+    this.adminStats.totalOrders = totalElements;
+
+    // Calculate total revenue
+    this.adminStats.totalRevenue = orders.reduce((sum: number, order: any) => 
+      sum + (order.totalAmount || 0), 0
+    );
+
+    // Get recent orders (first 5)
+    this.recentOrders = orders.slice(0, 5).map((order: any) => ({
+      id: order.id,
+      orderNumber: order.orderNumber || order.id?.substring(0, 8),
+      customerName: order.customerName || 'N/A',
+      totalAmount: order.totalAmount || 0,
+      orderStatus: order.orderStatus,
+      createdAt: order.createdAt,
+      totalItems: order.totalItems || 0
+    }));
+
+    // Calculate order status distribution
+    const statusCounts: any = {};
+    orders.forEach((order: any) => {
+      const status = order.orderStatus || 'UNKNOWN';
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    this.orderStatusData = Object.keys(statusCounts).map(status => ({
+      status,
+      count: statusCounts[status],
+      color: this.getStatusColor(status)
+    }));
+  }
+
+  /**
+   * Load dashboard for CLIENT users (existing logic)
+   */
+  loadClientDashboard() {
+    this.isLoading = true;
+
     const productsPayload = {
       pageNo: 0,
       pageSize: 100,
@@ -109,7 +262,6 @@ export class DefaultComponent implements OnInit {
       clientId: this.clientId || ''
     };
 
-    // Fetch all data in parallel
     forkJoin({
       products: this.apiService.searchProducts(productsPayload),
       orders: this.apiService.searchOrders(ordersPayload),
@@ -148,11 +300,10 @@ export class DefaultComponent implements OnInit {
       .slice(0, 4);
   }
 
-    getBarHeight(count: number): number {
+  getBarHeight(count: number): number {
     if (this.monthlyOrdersData.length === 0) return 0;
     const maxCount = Math.max(...this.monthlyOrdersData.map(d => d.count));
     if (maxCount === 0) return 0;
-    // Ensure at least 10% height for visibility, max 100%
     return Math.max(10, (count / maxCount) * 100);
   }
   
@@ -163,11 +314,9 @@ export class DefaultComponent implements OnInit {
 
     this.stats.totalOrders = totalElements;
     
-    // Calculate order statistics
     this.stats.pendingOrders = allOrders.filter((o: any) => o.orderStatus === 'PENDING').length;
     this.stats.completedOrders = allOrders.filter((o: any) => o.orderStatus === 'DELIVERED').length;
     
-    // Calculate revenue
     this.stats.totalRevenue = allOrders.reduce((sum: number, order: any) => 
       sum + (order.totalAmount || 0), 0
     );
@@ -176,7 +325,6 @@ export class DefaultComponent implements OnInit {
       ? this.stats.totalRevenue / this.stats.totalOrders 
       : 0;
 
-    // Map recent orders
     this.recentOrders = recentOrders.slice(0, 5).map((order: any) => ({
       id: order.id,
       orderNumber: order.orderNumber || order.id?.substring(0, 8),
@@ -187,7 +335,6 @@ export class DefaultComponent implements OnInit {
       totalItems: order.totalItems || 0
     }));
 
-    // Calculate order status distribution
     const statusCounts: any = {};
     allOrders.forEach((order: any) => {
       const status = order.orderStatus || 'UNKNOWN';
@@ -200,7 +347,6 @@ export class DefaultComponent implements OnInit {
       color: this.getStatusColor(status)
     }));
 
-    // Calculate monthly orders (last 6 months)
     this.calculateMonthlyOrders(allOrders);
   }
 
@@ -229,9 +375,11 @@ export class DefaultComponent implements OnInit {
     const colorMap: { [key: string]: string } = {
       'PENDING': '#ffc107',
       'CONFIRMED': '#0dcaf0',
-      'IN_TRANSIT': '#0d6efd',
+      'PAID': '#0d6efd',
+      'SHIPPED': '#17a2b8',
       'DELIVERED': '#198754',
-      'CANCELLED': '#dc3545'
+      'CANCELLED': '#dc3545',
+      'REFUNDED': '#fd7e14'
     };
     return colorMap[status] || '#6c757d';
   }
@@ -240,9 +388,13 @@ export class DefaultComponent implements OnInit {
     const classMap: { [key: string]: string } = {
       'PENDING': 'bg-warning text-dark',
       'CONFIRMED': 'bg-info text-white',
-      'IN_TRANSIT': 'bg-primary text-white',
+      'PAID': 'bg-primary text-white',
+      'SHIPPED': 'bg-info text-white',
       'DELIVERED': 'bg-success text-white',
-      'CANCELLED': 'bg-danger text-white'
+      'CANCELLED': 'bg-danger text-white',
+      'REFUNDED': 'bg-warning text-dark',
+      'ACTIVE': 'bg-success text-white',
+      'INACTIVE': 'bg-secondary text-white'
     };
     return classMap[status] || 'bg-secondary text-white';
   }
@@ -288,7 +440,6 @@ export class DefaultComponent implements OnInit {
     return statusData ? this.calculatePercentage(statusData.count, this.stats.totalOrders) : 0;
   }
 
-  // Calculate trend (comparing to previous period)
   calculateTrend(current: number, previous: number): { value: number; isPositive: boolean } {
     if (previous === 0) return { value: 0, isPositive: true };
     const change = ((current - previous) / previous) * 100;

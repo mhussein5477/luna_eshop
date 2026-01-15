@@ -178,13 +178,7 @@ this.route.queryParams.subscribe(params => {
     
     this.apiService.createOrder(orderPayload).subscribe({
       next: (response) => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Order Placed Successfully!',
-          text: 'Your order has been received and is being processed.',
-          confirmButtonText: 'Proceed to Whatsapp'
-        }).then(() => {
-              this.sendOrderToWhatsApp(response.data);
+        this.sendOrderToWhatsApp(response.data);
           // Clear cart
           this.cartService.clearCart();
           
@@ -200,8 +194,6 @@ this.route.queryParams.subscribe(params => {
           this.router.navigate(['/product-list'], {
   queryParams: { clientCode: this.clientData.clientCode }
 });
-
-        });
         
         this.isSubmitting = false;
       },

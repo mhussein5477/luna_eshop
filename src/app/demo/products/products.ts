@@ -36,12 +36,6 @@ interface ProductCategory {
   description: string;
 }
 
-interface Client {
-  id: string;
-  name: string;
-  clientCode: string;
-}
-
 @Component({
   selector: 'app-products',
   templateUrl: './products.html',
@@ -59,10 +53,6 @@ export class Products implements OnDestroy {
   // Image upload
   selectedFiles: File[] = [];
   isUploadingImages = false;
-  
-  // Dev mode check
-  isDevMode = false;
-  clients: Client[] = [];
   
   // Debouncer for search
   private searchSubject = new Subject<string>();
@@ -119,19 +109,22 @@ export class Products implements OnDestroy {
   }
 
   ngOnInit() {
-    this.checkDevMode();
-
+    // Get client ID from auth service
     const clientId = this.authService.clientId;
 
-    if (!this.isDevMode && clientId) {
-      // 🔐 lock search to logged-in client
-      this.searchPayload.clientId = clientId;
-      this.newProduct.clientId = clientId;
+    if (!clientId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Authentication Error',
+        text: 'Client ID not found. Please log in again.',
+        confirmButtonText: 'OK'
+      });
+      return;
     }
 
-    if (this.isDevMode) {
-      this.loadClients();
-    }
+    // Lock search to logged-in client
+    this.searchPayload.clientId = clientId;
+    this.newProduct.clientId = clientId;
 
     this.loadProducts();
     this.loadCategories();
@@ -139,21 +132,6 @@ export class Products implements OnDestroy {
 
   ngOnDestroy() {
     this.searchSubject.complete();
-  }
-
-  checkDevMode() {
-    this.isDevMode = this.authService.role === 'ROLE_ADMIN';
-  }
-
-  loadClients() {
-    this.apiService.getAllClients().subscribe({
-      next: (res: any) => {
-        this.clients = res.data ?? [];
-      },
-      error: (err) => {
-        console.error('Failed to load clients', err);
-      }
-    });
   }
 
   get activeProduct() {
@@ -233,6 +211,13 @@ export class Products implements OnDestroy {
     this.selectedProduct = null;
     this.selectedFiles = [];
     this.resetForm();
+    
+    // Ensure clientId is set
+    const clientId = this.authService.clientId;
+    if (clientId) {
+      this.newProduct.clientId = clientId;
+    }
+    
     this.showModal('productModal');
   }
 
@@ -240,6 +225,13 @@ export class Products implements OnDestroy {
     this.modalMode = 'edit';
     this.selectedProduct = { ...product };
     this.selectedFiles = [];
+    
+    // Ensure clientId is set
+    const clientId = this.authService.clientId;
+    if (clientId && !this.selectedProduct.clientId) {
+      this.selectedProduct.clientId = clientId;
+    }
+    
     this.showModal('productModal');
   }
 
@@ -354,7 +346,10 @@ export class Products implements OnDestroy {
   submitProduct() {
     if (this.isSubmitting) return;
 
-    if (!this.activeProduct.name?.trim()) {
+    const productToSubmit = this.modalMode === 'add' ? this.newProduct : this.selectedProduct;
+
+    // Validation
+    if (!productToSubmit.name?.trim()) {
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -366,7 +361,7 @@ export class Products implements OnDestroy {
       return;
     }
 
-    if (!this.activeProduct.categoryId) {
+    if (!productToSubmit.categoryId) {
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -378,26 +373,32 @@ export class Products implements OnDestroy {
       return;
     }
 
-    if (!this.activeProduct.clientId) {
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'warning',
-        title: this.isDevMode ? 'Please select a client' : 'Client ID not found. Please log in again.',
-        showConfirmButton: false,
-        timer: 2000
-      });
-      return;
+    // Ensure clientId is always set
+    if (!productToSubmit.clientId) {
+      const clientId = this.authService.clientId;
+      if (clientId) {
+        productToSubmit.clientId = clientId;
+      } else {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Client ID not found. Please log in again.',
+          showConfirmButton: false,
+          timer: 3000
+        });
+        return;
+      }
     }
 
     this.isSubmitting = true;
 
     const payload = {
-      ...this.activeProduct,
-      name: this.activeProduct.name?.trim(),
-      description: this.activeProduct.description?.trim(),
-      isInStock: this.activeProduct.isInStock ? 1 : 0,
-      isFeatured: this.activeProduct.isFeatured ? 1 : 0,
+      ...productToSubmit,
+      name: productToSubmit.name?.trim(),
+      description: productToSubmit.description?.trim(),
+      isInStock: productToSubmit.isInStock ? 1 : 0,
+      isFeatured: productToSubmit.isFeatured ? 1 : 0,
     };
 
     const request$ = this.modalMode === 'edit'
@@ -458,6 +459,7 @@ export class Products implements OnDestroy {
     }).then((result) => {
       if (result.isConfirmed) {
         console.log('Delete product:', product);
+        // TODO: Implement delete API call
       }
     });
   }
@@ -520,7 +522,7 @@ export class Products implements OnDestroy {
   }
 
   resetForm() {
-    const clientId = this.isDevMode ? '' : (this.authService.clientId || '');
+    const clientId = this.authService.clientId || '';
     
     this.newProduct = {
       clientId: clientId,

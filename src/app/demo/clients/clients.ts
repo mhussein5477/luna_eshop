@@ -5,6 +5,7 @@ import { LoaderMaterial } from '../component/loader-material/loader-material';
 import { ApiService } from '../api-service';
 import { Pagination } from '../widget/pagination/pagination';
 import Swal from 'sweetalert2';
+import { QRCodeComponent } from 'angularx-qrcode';
 
 declare var bootstrap: any; // for Bootstrap modal programmatic control
 
@@ -12,7 +13,7 @@ declare var bootstrap: any; // for Bootstrap modal programmatic control
   selector: 'app-clients',
   templateUrl: './clients.html',
   styleUrls: ['./clients.scss'],
-  imports: [CommonModule, FormsModule, LoaderMaterial , Pagination],
+  imports: [CommonModule, FormsModule, LoaderMaterial , Pagination, QRCodeComponent],
 })
 export class ClientsComponent {
   selectedFilter = 'all';
@@ -31,6 +32,11 @@ export class ClientsComponent {
   // User details modal
   userDetails: any = null;
   isLoadingUserDetails = false;
+
+  // QR Code modal
+  qrCodeData: string = '';
+  qrCodeClient: any = null;
+  isGeneratingQR = false;
 
   searchPayload: {
     pageNo: number;
@@ -148,6 +154,68 @@ export class ClientsComponent {
     this.selectedClient = { ...client };
     this.logoPreviewUrl = client.clientLogo || null;
     this.showModal('addClientModal');
+  }
+
+  /** Open QR Code modal */
+  openQRCodeModal(client: any) {
+    if (!client.website || client.website.trim() === '') {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'This client does not have a website URL',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+      return;
+    }
+
+    this.qrCodeClient = client;
+    this.qrCodeData = client.website;
+    this.showModal('qrCodeModal');
+  }
+
+  /** Download QR Code as image */
+  downloadQRCode() {
+    const canvas = document.querySelector('#qrCodeCanvas canvas') as HTMLCanvasElement;
+    if (!canvas) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'QR Code not found',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true
+      });
+      return;
+    }
+
+    // Convert canvas to blob and download
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const fileName = `${this.qrCodeClient.name.replace(/\s+/g, '_')}_QR_Code.png`;
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'QR Code downloaded successfully',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true
+        });
+      }
+    });
   }
 
   /** Handle logo file selection */
