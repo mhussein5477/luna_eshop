@@ -23,6 +23,7 @@ interface AdminStats {
   totalProducts: number;
   totalOrders: number;
   totalRevenue: number;
+  totalScans: number;
 }
 
 interface RecentOrder {
@@ -53,6 +54,8 @@ interface ClientInfo {
   phoneNumber: string;
   status: string;
   createdAt: string;
+  totalOrders: number; // CHANGED: Now actual order count from API
+  totalScans: number;
 }
 
 @Component({
@@ -89,7 +92,8 @@ export class DefaultComponent implements OnInit {
     inactiveClients: 0,
     totalProducts: 0,
     totalOrders: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
+    totalScans: 0
   };
 
   recentOrders: RecentOrder[] = [];
@@ -140,7 +144,7 @@ export class DefaultComponent implements OnInit {
       sortBy: 'createdAt',
       sortDir: 'DESC',
       name: '',
-      clientId: '' // Admin sees all products
+      clientId: ''
     };
 
     const ordersPayload = {
@@ -148,7 +152,7 @@ export class DefaultComponent implements OnInit {
       pageSize: 1000,
       sortBy: 'createdAt',
       sortDir: 'DESC',
-      clientId: '' // Admin sees all orders
+      clientId: ''
     };
 
     forkJoin({
@@ -160,7 +164,9 @@ export class DefaultComponent implements OnInit {
         this.processAdminClientsData(results.clients);
         this.processAdminProductsData(results.products);
         this.processAdminOrdersData(results.orders);
-        this.isLoading = false;
+        
+        // NEW: Fetch order counts for each recent client
+        this.fetchOrderCountsForClients();
       },
       error: (error) => {
         console.error('Error loading admin dashboard:', error);
@@ -174,18 +180,20 @@ export class DefaultComponent implements OnInit {
     const totalElements = response.pageDetail?.totalElements || clients.length;
 
     this.adminStats.totalClients = totalElements;
-    this.adminStats.activeClients = clients.filter((c: any) => c.status === 'ACTIVE').length;
-    this.adminStats.inactiveClients = clients.filter((c: any) => c.status === 'INACTIVE').length;
+    this.adminStats.activeClients = clients.filter((c: any) => c.status === 'ACTIVE' || c.clientStatus === 'ACTIVE').length;
+    this.adminStats.inactiveClients = clients.filter((c: any) => c.status === 'INACTIVE' || c.clientStatus === 'INACTIVE').length;
 
-    // Get recent clients
+    // Initialize recent clients (order count will be fetched separately)
     this.recentClients = clients.slice(0, 5).map((client: any) => ({
       id: client.id,
       name: client.name,
       clientCode: client.clientCode,
       emailAddress: client.emailAddress,
       phoneNumber: client.phoneNumber,
-      status: client.status,
-      createdAt: client.createdAt
+      status: client.status || client.clientStatus,
+      createdAt: client.createdAt,
+      totalOrders: 0, // Will be fetched
+      totalScans: 0   // Will be calculated from totalOrders
     }));
   }
 
@@ -206,6 +214,9 @@ export class DefaultComponent implements OnInit {
     this.adminStats.totalRevenue = orders.reduce((sum: number, order: any) => 
       sum + (order.totalAmount || 0), 0
     );
+
+    // Calculate total scans (orders × 3)
+    this.adminStats.totalScans = this.adminStats.totalOrders ;
 
     // Get recent orders (first 5)
     this.recentOrders = orders.slice(0, 5).map((order: any) => ({
@@ -233,7 +244,53 @@ export class DefaultComponent implements OnInit {
   }
 
   /**
-   * Load dashboard for CLIENT users (existing logic)
+   * NEW: Fetch order counts for each recent client
+   * Uses the order search endpoint with clientId filter
+   */
+  fetchOrderCountsForClients() {
+    if (this.recentClients.length === 0) {
+      this.isLoading = false;
+      return;
+    }
+
+    // Create an array of observables to fetch order counts for each client
+    const orderCountRequests = this.recentClients.map(client =>
+      this.apiService.searchOrders({
+        pageNo: 0,
+        pageSize: 1,
+        sortBy: 'createdAt',
+        sortDir: 'DESC',
+        clientId: client.id
+      }).toPromise().then(
+        (response: any) => {
+          const totalOrders = response?.pageDetail?.totalElements || 0;
+          return { clientId: client.id, totalOrders };
+        },
+        (error) => {
+          console.error(`Error fetching orders for client ${client.id}:`, error);
+          return { clientId: client.id, totalOrders: 0 };
+        }
+      )
+    );
+
+    // Wait for all requests to complete
+    Promise.all(orderCountRequests).then((results) => {
+      // Update recent clients with their order counts
+      results.forEach(result => {
+        const client = this.recentClients.find(c => c.id === result.clientId);
+        if (client) {
+          client.totalOrders = result.totalOrders;
+          client.totalScans = result.totalOrders  ; // Calculate scans
+        }
+      });
+
+      console.log('Order counts updated for all clients:', this.recentClients);
+      this.isLoading = false;
+    });
+  }
+
+  /**
+   * Load dashboard for CLIENT users
    */
   loadClientDashboard() {
     this.isLoading = true;

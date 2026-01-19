@@ -36,6 +36,7 @@ import { AuthSessionService } from 'src/app/demo/auth-session';
   styleUrls: ['./nav-right.component.scss']
 })
 export class NavRightComponent {
+  
   private iconService = inject(IconService);
   private router = inject(Router);
 
@@ -89,11 +90,7 @@ export class NavRightComponent {
 
   // Settings menu
   setting = [
-    {
-      icon: 'question-circle',
-      title: 'Support',
-      link: 'https://lunapackaging.co.ke'
-    },
+    
     {
       icon: 'lock',
       title: 'Change Pass',

@@ -1,4 +1,5 @@
-@if (item.url && !item.external) {
+<!-- Regular internal link without action -->
+@if (item.url && !item.external && !item.action) {
   <li [ngClass]="item.classes!" [routerLinkActive]="['active']">
     <a [target]="item.target ? '_blank' : '_self'" [routerLink]="[item.url]" (click)="closeOtherMenu($event)">
       @if (item.icon) {
@@ -14,9 +15,29 @@
     </a>
   </li>
 }
-@if (item.url && item.external) {
+
+<!-- Item with action (like logout) -->
+@if (item.action) {
   <li [ngClass]="item.classes!">
-    <a [target]="item.target ? '_blank' : '_self'" [href]="item.url" (click)="navItemClick(item)">
+    <a href="javascript:void(0)" (click)="navItemClick($event, item)">
+      @if (item.icon) {
+        <span class="coded-micon">
+          <i antIcon type="{{ item.icon }}" theme="outline"></i>
+        </span>
+      }
+      @if (item.icon) {
+        <span class="coded-mtext">{{ item.title }}</span>
+      } @else {
+        {{ item.title }}
+      }
+    </a>
+  </li>
+}
+
+<!-- External link -->
+@if (item.url && item.external && !item.action) {
+  <li [ngClass]="item.classes!">
+    <a [target]="item.target ? '_blank' : '_self'" [href]="item.url" (click)="navItemClick($event, item)">
       @if (item.icon) {
         <span class="coded-micon">
           <i antIcon type="{{ item.icon }}" theme="outline"></i>

@@ -36,10 +36,15 @@ export class AuthSessionService {
   // 🔹 Decode token safely
   private decodeToken(): JwtPayload | null {
     const token = this.getToken();
-    if (!token) return null;
+    if (!token) {
+      console.warn('No token found in session storage');
+      return null;
+    }
 
     try {
-      return jwtDecode<JwtPayload>(token);
+      const decoded = jwtDecode<JwtPayload>(token);
+      console.log('Decoded token:', decoded);
+      return decoded;
     } catch (error) {
       console.error('Invalid JWT token', error);
       return null;
@@ -75,16 +80,32 @@ export class AuthSessionService {
 
   // 🔹 User role
   get role(): string | null {
-    return this.decodeToken()?.user?.role || null;
+    const role = this.decodeToken()?.user?.role || null;
+    console.log('Current user role:', role);
+    return role;
   }
 
-  // 🔹 Order type access
+  // 🔹 Check if user is admin
+  get isAdmin(): boolean {
+    return this.role === 'ROLE_ADMIN';
+  }
+
+  // 🔹 Check if user is client
+  get isClient(): boolean {
+    return this.role === 'ROLE_CLIENT';
+  }
+
+  // 🔹 Order type access (returns boolean)
   get isWhatsappOrder(): boolean {
-    return this.decodeToken()?.user?.isWhatsappOrder === 1;
+    const value = this.decodeToken()?.user?.isWhatsappOrder;
+    console.log('isWhatsappOrder value:', value);
+    return value === 1;
   }
 
   get isPortalOrder(): boolean {
-    return this.decodeToken()?.user?.isPortalOrder === 1;
+    const value = this.decodeToken()?.user?.isPortalOrder;
+    console.log('isPortalOrder value:', value);
+    return value === 1;
   }
 
   // 🔹 Token expiry checks
@@ -97,11 +118,15 @@ export class AuthSessionService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken() && !this.isTokenExpired();
+    const hasToken = !!this.getToken();
+    const notExpired = !this.isTokenExpired();
+    console.log('isLoggedIn - hasToken:', hasToken, 'notExpired:', notExpired);
+    return hasToken && notExpired;
   }
 
   // 🔹 Clear session
   logout(): void {
+    console.log('Logging out - clearing session storage');
     sessionStorage.clear();
   }
 }

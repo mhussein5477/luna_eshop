@@ -54,14 +54,19 @@ export class NavContentComponent implements OnInit {
         QuestionOutline
       ]
     );
-    this.navigations = NavigationItems;
+    // Initialize with empty array - will be built in ngOnInit
+    this.navigations = [];
   }
 
   ngOnInit() {
     if (this.windowWidth < 1025) {
-      (document.querySelector('.coded-navbar') as HTMLDivElement).classList.add('menupos-static');
+      (document.querySelector('.coded-navbar') as HTMLDivElement)?.classList.add('menupos-static');
     }
+    
+    // Build navigation first
     this.buildNavigation();
+    
+    // Then setup logout action
     this.setupLogoutAction();
   }
 
@@ -97,67 +102,85 @@ export class NavContentComponent implements OnInit {
     const userRole = this.authService.role;
     const isPortalOrder = this.authService.isPortalOrder;
 
+    console.log('Building navigation for role:', userRole, 'isPortalOrder:', isPortalOrder);
+
     if (userRole === 'ROLE_ADMIN') {
       // ADMIN sees: Dashboard, Clients, Settings, Logout
       this.navigations = NavigationItems
         .map(group => {
-          if (group.id === 'dashboard' && group.children) {
+          // Deep clone to avoid mutating original
+          const clonedGroup = JSON.parse(JSON.stringify(group));
+          
+          if (clonedGroup.id === 'dashboard' && clonedGroup.children) {
             // Keep only Dashboard from this group
-            const filteredChildren = group.children.filter(item => item.id === 'default');
+            const filteredChildren = clonedGroup.children.filter((item: NavigationItem) => 
+              item.id === 'default'
+            );
             if (filteredChildren.length === 0) return null;
-            return { ...group, children: filteredChildren };
+            return { ...clonedGroup, children: filteredChildren };
           }
           
-          if (group.id === 'distributors') {
+          if (clonedGroup.id === 'distributors') {
             // Keep the entire Admin Operations group (has Clients)
-            return group;
+            return clonedGroup;
           }
           
-          if (group.id === 'authentication' && group.children) {
+          if (clonedGroup.id === 'authentication' && clonedGroup.children) {
             // Keep only Settings and Logout (no Profile)
-            const filteredChildren = group.children.filter(item => 
+            const filteredChildren = clonedGroup.children.filter((item: NavigationItem) => 
               item.id === 'settings' || item.id === 'logout'
             );
             if (filteredChildren.length === 0) return null;
-            return { ...group, children: filteredChildren };
+            return { ...clonedGroup, children: filteredChildren };
           }
           
-          return group;
+          // Hide other groups
+          return null;
         })
         .filter(Boolean) as NavigationItem[];
     } else {
       // CLIENT sees: Dashboard, Orders (if isPortalOrder = 1), Products, Reports, Profile, Settings, Logout
       this.navigations = NavigationItems
         .map(group => {
-          if (group.id === 'dashboard' && group.children) {
+          // Deep clone to avoid mutating original
+          const clonedGroup = JSON.parse(JSON.stringify(group));
+          
+          if (clonedGroup.id === 'dashboard' && clonedGroup.children) {
             // Filter children based on isPortalOrder
-            const filteredChildren = group.children.filter(item => {
-              // Show Orders only if isPortalOrder is 1
+            const filteredChildren = clonedGroup.children.filter((item: NavigationItem) => {
+              // Show Orders only if isPortalOrder is true
               if (item.id === 'orders') {
                 return isPortalOrder;
               }
               // Show all other items (Dashboard, Products, Reports)
-              return true;
+              return item.id === 'default' || item.id === 'products' || item.id === 'reports';
             });
             
             if (filteredChildren.length === 0) return null;
-            return { ...group, children: filteredChildren };
+            return { ...clonedGroup, children: filteredChildren };
           }
           
-          if (group.id === 'distributors') {
-            // Remove entire Admin Operations group (has Clients)
+          if (clonedGroup.id === 'distributors') {
+            // Remove entire Admin Operations group (has Clients) for clients
             return null;
           }
           
-          if (group.id === 'authentication') {
+          if (clonedGroup.id === 'authentication' && clonedGroup.children) {
             // Keep all items (Profile, Settings, Logout)
-            return group;
+            const filteredChildren = clonedGroup.children.filter((item: NavigationItem) => 
+              item.id === 'profile' || item.id === 'settings' || item.id === 'logout'
+            );
+            if (filteredChildren.length === 0) return null;
+            return { ...clonedGroup, children: filteredChildren };
           }
           
-          return group;
+          // Hide other groups
+          return null;
         })
         .filter(Boolean) as NavigationItem[];
     }
+
+    console.log('Built navigation:', this.navigations);
   }
 
   fireOutClick() {
@@ -192,6 +215,11 @@ export class NavContentComponent implements OnInit {
    * Handle navigation click for items with an action
    */
   onNavItemClick(item: NavigationItem) {
-    console.log(item);
+    console.log('Nav item clicked:', item);
+    
+    // If item has an action, execute it
+    if (item.action && typeof item.action === 'function') {
+      item.action();
+    }
   }
 }

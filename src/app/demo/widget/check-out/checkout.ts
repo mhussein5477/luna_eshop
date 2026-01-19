@@ -107,17 +107,17 @@ this.route.queryParams.subscribe(params => {
       return false;
     }
     
-    if (!this.customerInfo.email?.trim()) {
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'warning',
-        title: 'Please enter your email',
-        showConfirmButton: false,
-        timer: 2000
-      });
-      return false;
-    }
+    // if (!this.customerInfo.email?.trim()) {
+    //   Swal.fire({
+    //     toast: true,
+    //     position: 'top-end',
+    //     icon: 'warning',
+    //     title: 'Please enter your email',
+    //     showConfirmButton: false,
+    //     timer: 2000
+    //   });
+    //   return false;
+    // }
     
     if (!this.customerInfo.phone?.trim()) {
       Swal.fire({
@@ -170,7 +170,7 @@ this.route.queryParams.subscribe(params => {
         productId: item.productId,
         quantity: item.quantity
       })),
-      customerEmail: this.customerInfo.email.trim(),
+      // customerEmail: this.customerInfo.email.trim(),
       customerName: this.customerInfo.name.trim(),
       customerPhone: this.customerInfo.phone.trim(),
       customerAddress: this.customerInfo.address.trim()

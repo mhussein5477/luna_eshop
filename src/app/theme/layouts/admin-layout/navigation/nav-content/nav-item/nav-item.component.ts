@@ -42,13 +42,27 @@ export class NavItemComponent {
         last_parent.classList.add('active');
       }
     }
-    if ((document.querySelector('app-navigation.pc-sidebar') as HTMLDivElement).classList.contains('mob-open')) {
+    if ((document.querySelector('app-navigation.pc-sidebar') as HTMLDivElement)?.classList.contains('mob-open')) {
       (document.querySelector('app-navigation.pc-sidebar') as HTMLDivElement).classList.remove('mob-open');
     }
   }
 
-
-  navItemClick(val){
-    console.log(val)
+  /**
+   * Handle navigation item click
+   * If item has an action, execute it instead of navigating
+   */
+  navItemClick(event: MouseEvent, item: NavigationItem) {
+    console.log('Nav item clicked:', item);
+    
+    // If item has an action (like logout), execute it and prevent default
+    if (item.action && typeof item.action === 'function') {
+      event.preventDefault();
+      item.action();
+      this.closeOtherMenu(event);
+      return;
+    }
+    
+    // Otherwise, let the router handle it normally
+    this.closeOtherMenu(event);
   }
 }

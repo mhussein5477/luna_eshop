@@ -315,7 +315,7 @@ export class AuthLoginComponent {
           });
 
           // Navigate to dashboard
-          this.router.navigate(['./dashboard/default']);
+          this.router.navigate(['./admin/dashboard/default']);
         } else {
           throw new Error('Invalid token response');
         }

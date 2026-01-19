@@ -50,29 +50,6 @@
         </div>
       </div>
 
-      <!-- Total Products -->
-      <!-- <div class="col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div>
-                <h6 class="text-muted mb-0 fw-normal">Total Products</h6>
-              </div>
-              <div class="bg-info bg-opacity-10 p-2 rounded">
-                <i class="fa fa-box text-info"></i>
-              </div>
-            </div>
-            <h2 class="mb-2">{{ adminStats.totalProducts }}</h2>
-            <div class="d-flex align-items-center gap-2">
-              <span class="badge bg-info bg-opacity-10 text-info border border-info">
-                <i class="fa fa-layer-group"></i>
-                System-wide
-              </span>
-            </div>
-          </div>
-        </div>
-      </div> -->
-
       <!-- Total Orders -->
       <div class="col-md-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100">
@@ -96,28 +73,28 @@
         </div>
       </div>
 
-      <!-- Total Revenue -->
-      <!-- <div class="col-md-6 col-xl-3">
+      <!-- Total Scans -->
+      <div class="col-md-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <h6 class="text-muted mb-0 fw-normal">Total Revenue</h6>
+                <h6 class="text-muted mb-0 fw-normal">Total Scans</h6>
               </div>
               <div class="bg-success bg-opacity-10 p-2 rounded">
-                <i class="fa fa-money-bill text-success"></i>
+                <i class="fa fa-barcode text-success"></i>
               </div>
             </div>
-            <h2 class="mb-2">{{ formatCurrency(adminStats.totalRevenue) }}</h2>
+            <h2 class="mb-2">{{ adminStats.totalScans }}</h2>
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-success bg-opacity-10 text-success border border-success">
-                <i class="fa fa-dollar-sign"></i>
-                System-wide
+                <i class="fa fa-arrow-up"></i>
+                Scans
               </span>
             </div>
           </div>
         </div>
-      </div> -->
+      </div>
 
     </div>
 
@@ -146,11 +123,11 @@
                     <th>EMAIL</th>
                     <th>PHONE</th>
                     <th>STATUS</th>
-                    <!-- <th>JOINED</th> -->
+                    <th>SCANS</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let client of recentClients">
+                 <tr *ngFor="let client of recentClients">
                     <td><strong>{{ client.name }}</strong></td>
                     <td><code class="text-muted">{{ client.clientCode }}</code></td>
                     <td>{{ client.emailAddress }}</td>
@@ -160,7 +137,13 @@
                         {{ client.status }}
                       </span>
                     </td>
-                    <!-- <td>{{ client.createdAt }}</td> -->
+                    <td>
+                      <span class="badge bg-info bg-opacity-10 text-info border border-info">
+                        <i class="fa fa-barcode me-1"></i>
+                        {{ client.totalScans }}
+                      </span>
+                      <small class="text-muted d-block">({{ client.totalOrders }} orders)</small>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -169,11 +152,7 @@
         </div>
       </div>
 
-     
-
     </div>
-
-   
 
   </div>
 
@@ -359,8 +338,6 @@
                     <th>ORDER ID</th>
                     <th>CUSTOMER</th>
                     <th>STATUS</th>
-                    <!-- <th>DATE & TIME</th> -->
-                    <!-- <th class="text-end">AMOUNT</th> -->
                   </tr>
                 </thead>
                 <tbody>
@@ -374,13 +351,6 @@
                         {{ order.orderStatus }}
                       </span>
                     </td>
-                    <!-- <td>
-                      <div>{{ formatDate(order.createdAt) }}</div>
-                      <small class="text-muted">{{ formatTime(order.createdAt) }}</small>
-                    </td> -->
-                    <!-- <td class="text-end">
-                      <strong class="text-success">{{ formatCurrency(order.totalAmount) }}</strong>
-                    </td> -->
                   </tr>
                 </tbody>
               </table>
